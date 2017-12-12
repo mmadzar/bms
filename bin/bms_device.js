@@ -29,11 +29,12 @@ function onSignalInt() {
 }
 
 // events
-serialInterface.on('data', onSerialData);
 serialInterface.on('open', function (err) {
 	evEmitter.emit('device', "connected " + deviceId)
-	console.log("port open...")
+	console.log("connected " + deviceId);
 });
+serialInterface.on('data', onSerialData);
+
 
 function onSerialData(data) {
 	evEmitter.emit('bmsdata', data); //original bus message
@@ -44,6 +45,7 @@ function collectBuffer(data) {
 	var dt = new Date();
 	var msg = dt.toUTCString() + '\t';
 	if (data.len === 1) {
+		CONSOLE.log
 		msg = msg + data.toString(16);
 		updateBuffer(data);
 
@@ -58,22 +60,50 @@ function collectBuffer(data) {
 }
 
 function updateBuffer(dataItem) {
-	//Collect buffer and make message
+	//Collect buffer and compose message
 	//0x77 - EOR
 	allBuffer.push(dataItem);
-	if (allBuffer.len > 3) {
-		if (allBuffer[0] == 221 && allBuffer[1] == 165) { //DD A5 LL LL ... CS EOR
-			var mlen = parseInt(allBuffer[3]);
-			if (mlen > 0 && allBuffer.len >= mlen + 6) {
-				console.log('messsage 1: ' + toHexString(allBuffer));
+	if (allBuffer.length % 256 === 0) {
+		console.log(toHexString(allBuffer))
+	}
+
+	//console.log(toHexString(allBuffer));
+	if (allBuffer.length > 4) {
+		if (allBuffer[0] === 221 && (allBuffer[1] === 165 || allBuffer[1] === 90)) { //DD A5 (5A) LL LL ... CS EOR
+			//check for command dd 5a xx xx xx xx 77
+			if (allBuffer.length === 7 && allBuffer[6] === 119) {
+				console.log('command.: ' + toHexString(allBuffer));
 				allBuffer = [];
+			} else {
+				var mlen = allBuffer[3];
+				//console.log("len: " + mlen + "..." + toHexString(allBuffer));
+				if (mlen > 0 && allBuffer.length >= mlen + 7) {
+					console.log('response: ' + toHexString(allBuffer));
+
+					//Handle message - refactor out
+					if (allBuffer[2] === 0 && allBuffer[3] === 27) //status info for command 03
+					{
+						var t1 = toHexString([allBuffer[27], allBuffer[28]]);
+						var t2 = toHexString([allBuffer[29], allBuffer[30]]);
+						var temp1 = getTemp(parseInt(t1.replace(' ', ''), 16));
+						var temp2 = getTemp(parseInt(t2.replace(' ', ''), 16));
+						//console.log('temp: ' + t1 + ' ' + temp1 + " .. " + t2 + ' ' + temp2);
+					}
+					allBuffer = [];
+				}
 			}
 		}
 	}
-	if (dataItem === 119) { //77
-		console.log('messsage 2: ' + toHexString(allBuffer));
+
+	if (dataItem === 119 && allBuffer.length > 0 && (allBuffer[0] !== 221 && allBuffer[1] !== 165)) { //77
+		console.log('unknown : ' + toHexString(allBuffer));
 		allBuffer = [];
 	}
+}
+
+function getTemp(kelvin10) {
+	var tempC = (kelvin10 / 10) - 273.15; // Convert Kelvin to Celsius
+	return tempC.toFixed(2);
 }
 
 //emits an array of statuses
