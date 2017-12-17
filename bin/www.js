@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('carctrl:server');
 var http = require('http');
+var dateVar = new Date();
 
 /**
  * Get port from environment and store in Express.
@@ -23,21 +24,23 @@ var server = http.createServer(app.app);
 
 // socket.io
 var io = require('socket.io')(server);
-io.on('connection', function(socket){
+io.on('connection', function (socket) {
   console.log('user connected');
   var dt = new Date();
-  io.emit('chat message', dt.toUTCString() + '\t' + 'io ready.');
-  socket.on('send bus message', function(msg){
-    app.bus.sendMessage(msg);
+  io.emit('chat message',  dt.toJSON() + '\t' + 'io ready.');
+  socket.on('send message', function (msg) {
+    app.bms.sendMessage(msg);
   });
 });
 
 //The Emitter events
-app.evEmitter.on('busmessage', function(data){
-  io.emit('chat message', data);
+app.evEmitter.on('bmsmessage', function (data) {
+  var dt = new Date();
+  //io.emit('chat message', dt.toJSON() + '\t' + data);
 });
-app.evEmitter.on('status update', function(data){
-  io.emit('status update', data);
+app.evEmitter.on('status update', function (data) {
+  var dt = new Date();
+  io.emit('status update', dt.toJSON() + '\t' + data);
 });
 
 /**
@@ -77,9 +80,9 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === 'string' ?
+    'Pipe ' + port :
+    'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -102,8 +105,8 @@ function onError(error) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+  var bind = typeof addr === 'string' ?
+    'pipe ' + addr :
+    'port ' + addr.port;
   debug('Listening on ' + bind);
 }

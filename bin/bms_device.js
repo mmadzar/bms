@@ -1,9 +1,11 @@
+var path = require('path');
+var messages_const = new require('./messages.js')
 var SerialPort = require('serialport');
 //var baasic = require('./baasic');
 
 // config
-var device = 'COM22';
-var deviceId = 'bms01';
+var device = 'COM22'; //Serial port
+var deviceId = 'bms01'; //device id on network
 
 // setup interface
 var serialInterface = new SerialPort(device, {
@@ -13,19 +15,21 @@ var serialInterface = new SerialPort(device, {
 	parity: 'even',
 	xon: false,
 	xoff: false,
-	rtscts: false
+	rtscts: false,
+	autoOpen: false,
 });
+serialInterface.open();
 
 var evEmitter;
-var allBuffer = [];
+var msgQueue = [];
+var allBuffer = []; //temporary buffer collection
+var statusAll = []; //status object (key, value) with values
 
 // cleanup
 process.on('SIGINT', onSignalInt);
 
 function onSignalInt() {
-	ibusInterface.shutdown(function () {
-		process.exit();
-	});
+	serialInterface.close();
 }
 
 // events
@@ -34,71 +38,160 @@ serialInterface.on('open', function (err) {
 	console.log("connected " + deviceId);
 });
 serialInterface.on('data', onSerialData);
-
+serialInterface.on("error", function(error){
+    console.log(error);
+});
 
 function onSerialData(data) {
-	evEmitter.emit('bmsdata', data); //original bus message
+	//evEmitter.emit('bmsdata', data); //original bus message
 	collectBuffer(data);
+}
+
+function queueMessage(hexMessageWithSpaces) {
+	var chars = hexMessageWithSpaces.split(' ');
+	var msg = [];
+	for (var i = 0; i < chars.length; i++) {
+		msg.push('0x' + chars[i]);
+	}
+	var msgBuff = new Buffer(msg);
+	queueMessage(msgBuff);
+}
+
+function queueMessage(bufferMessage) {
+	if (bufferMessage.length > 0) {
+		msgQueue.push({
+			content: bufferMessage,
+			status: 0
+		}); //add message to queue with default status
+		console.log('queued: ');
+	}
+	if (msgQueue.length > 0) {
+		writeMessageToSerial(msgQueue[0]);
+	}
+}
+
+function writeMessageToSerial() {
+	var msg = msgQueue[0];
+	if (msg !== undefined && msg.status === 0) {
+		serialInterface.write(msg.content, function (err) {
+			if (err) {
+				console.log('Error on writing to serial. ' + err);
+			}
+		});
+		msg.status = 1; //sending message
+		var hexMessageWithSpaces = toHexString(msg.content);
+		evEmitter.emit('msg sent: ', hexMessageWithSpaces);
+		console.log('sent: ' + hexMessageWithSpaces);
+	}
+}
+
+function realtimeMonitor() {
+	var resolution = 500; //miliseconds - min: 250 ms
+	//Send messages
+	if (msgQueue.length === 0) {
+		queueMessage(messages_const.getInfo03());
+		queueMessage(messages_const.getInfo04());
+	}
+	setTimeout(function () {
+		realtimeMonitor();
+	}, resolution);
 }
 
 function collectBuffer(data) {
 	var dt = new Date();
-	var msg = dt.toUTCString() + '\t';
+	//var msg = dt.toUTCString() + '\t';
 	if (data.len === 1) {
-		CONSOLE.log
-		msg = msg + data.toString(16);
+		//msg = msg + data.toString(16);
 		updateBuffer(data);
-
 	} else {
-		msg = msg + toHexString(data);
+		//msg = msg + toHexString(data);
 		for (var i = 0; i < data.length; i++) {
 			updateBuffer(data[i]);
 		}
 	}
-
-	evEmitter.emit('bmsmessage', msg);
 }
 
 function updateBuffer(dataItem) {
 	//Collect buffer and compose message
-	//0x77 - EOR
+	if (allBuffer.length === 0 && dataItem !== 221) {
+		console.log('skip push ' + dataItem.toString(16));
+	} else if (allBuffer.length === 1 && dataItem === 221) {
+		//clear to fix errors
+		allBuffer = [];
+	}
+	console.log('push ' + dataItem + ' - ' + dataItem.toString(16));
 	allBuffer.push(dataItem);
+
 	if (allBuffer.length % 256 === 0) {
-		console.log(toHexString(allBuffer))
+		//console.log('big buffer: ' + toHexString(allBuffer));
 	}
 
 	//console.log(toHexString(allBuffer));
 	if (allBuffer.length > 4) {
-		if (allBuffer[0] === 221 && (allBuffer[1] === 165 || allBuffer[1] === 90)) { //DD A5 (5A) LL LL ... CS EOR
-			//check for command dd 5a xx xx xx xx 77
-			if (allBuffer.length === 7 && allBuffer[6] === 119) {
-				console.log('command.: ' + toHexString(allBuffer));
-				allBuffer = [];
-			} else {
-				var mlen = allBuffer[3];
-				//console.log("len: " + mlen + "..." + toHexString(allBuffer));
-				if (mlen > 0 && allBuffer.length >= mlen + 7) {
-					console.log('response: ' + toHexString(allBuffer));
+		if (allBuffer[0] === 221 /* && (allBuffer[1] === 165 || allBuffer[1] === 90)*/ && dataItem === 119) { //DD A5 (5A) LL LL ... 77
+			var mlen = (allBuffer[2] * (16 * 16)) + (allBuffer[3]);
+			console.log("len: " + mlen + "..." + toHexString(allBuffer));
+			if (mlen > 0 && allBuffer.length >= mlen + 7) {
+				evEmitter.emit('bmsmessage', toHexString(allBuffer));
+				console.log('serial msg: ' + toHexString(allBuffer));
 
-					//Handle message - refactor out
-					if (allBuffer[2] === 0 && allBuffer[3] === 27) //status info for command 03
-					{
-						var t1 = toHexString([allBuffer[27], allBuffer[28]]);
-						var t2 = toHexString([allBuffer[29], allBuffer[30]]);
-						var temp1 = getTemp(parseInt(t1.replace(' ', ''), 16));
-						var temp2 = getTemp(parseInt(t2.replace(' ', ''), 16));
-						//console.log('temp: ' + t1 + ' ' + temp1 + " .. " + t2 + ' ' + temp2);
+				//Handle message
+				var buffMsg = msgQueue[0];
+				if (buffMsg !== undefined && buffMsg.status === 1) {
+					console.log('queue shift')
+					msgQueue.shift();
+					if (buffMsg.content.equals(messages_const.getInfo03())) {
+						decodeInfo03(allBuffer, mlen);
+					} else if (buffMsg.content.equals(messages_const.getInfo04())) {
+						decodeInfo04(allBuffer, mlen);
+					} else if (buffMsg.content.equals(messages_const.getInfo05())) {
+						decodeInfo05(allBuffer, mlen);
 					}
-					allBuffer = [];
 				}
+				allBuffer = [];
 			}
 		}
 	}
 
 	if (dataItem === 119 && allBuffer.length > 0 && (allBuffer[0] !== 221 && allBuffer[1] !== 165)) { //77
+		evEmitter.emit('bmsmessage', toHexString(allBuffer));
 		console.log('unknown : ' + toHexString(allBuffer));
 		allBuffer = [];
 	}
+
+	if (allBuffer.length === 0) {
+		//update queue
+		if (msgQueue.length > 0 && msgQueue[0].status === 1) {
+			msgQueue.shift();
+		}
+		if (msgQueue.length > 0) {
+			//console.log('write to serial')
+			writeMessageToSerial();
+		} else {
+			//console.log('no queue')
+		}
+	}
+}
+
+function decodeInfo03(messageArray, len) {
+	emitStatus("packV", ((messageArray[5] * 16 * 16 + messageArray[6]) / 1000).toFixed(2));
+	emitStatus("currentA", messageArray[7] * 16 * 16 + messageArray[8]);
+
+	emitStatus("temp1", getTemp(messageArray[27] * 16 * 16 + messageArray[28]));
+	emitStatus("temp2", getTemp(messageArray[29] * 16 * 16 + messageArray[30]));
+}
+
+function decodeInfo04(messageArray, len) {
+	var count = len / 2;
+	for (var i = 0; i < count; i++) {
+		var index = (i * 2) + 4;
+		var cellV = (messageArray[index] * (16 * 16)) + (messageArray[index + 1]);
+		emitStatus("cell" + padLeft((i + 1).toString(), 2), (cellV / 1000.000).toFixed(3));
+	}
+}
+
+function decodeInfo05(messageArray, len) {
+	//TODO
 }
 
 function getTemp(kelvin10) {
@@ -109,9 +202,15 @@ function getTemp(kelvin10) {
 //emits an array of statuses
 function emitStatus(k, v) {
 	var d = new Date();
-	var result = {};
-	result[k] = v;
-	evEmitter.emit('status update', result);
+	if (statusAll !== undefined) {
+		var result = statusAll[k];
+		if (result === undefined || Math.abs(result - v) > 0.002) {
+			statusAll[k] = v;
+			evEmitter.emit('status update', [
+				[k, v]
+			]);
+		}
+	}
 	//baasic.emitBaasic(k, v);
 }
 
@@ -127,24 +226,6 @@ function toHexString(bArray) {
 	return result.join(' ');
 }
 
-function Buff2Bin(bArray) {
-	var r = [];
-	for (var i = 0; i < bArray.length; i++) {
-		r.push(padLeft(bArray[i].toString(2), 8));
-	}
-	return Array.from(r.join(''));
-}
-
-function Buff2Bin2(bArray) {
-	//from second element on in the array
-	var r = [];
-	for (var i = 1; i < bArray.length; i++) {
-		r.push(padLeft(bArray[i].toString(2), 8));
-	}
-	return r;
-}
-
-
 function getPaddedLenBuf(text, len) {
 	var outputTextBuf = new Buffer(len);
 	outputTextBuf.fill(0x20);
@@ -159,16 +240,14 @@ function getPaddedLenBuf(text, len) {
 
 module.exports = {
 
-	init: function (eventemitter, device, /*, baasicapp*/ ) {
+	init: function (eventemitter /*, baasicapp*/ ) {
 		evEmitter = eventemitter;
+		msgQueue = [];
 		//baasic.init(baasicapp, evEmitter, this);
 	},
 
 	sendMessage: function (msgstring) {
-		sendBusMessage(msgstring);
+		realtimeMonitor();
+		//sendSerialMessage(msgstring);
 	},
-
-	getSerialInterface() {
-		return serialInterface();
-	}
 };

@@ -21,38 +21,17 @@ jQuery(function($){
     	e.preventDefault();
 		var msg = $('#message').val();
     	if(msg!==undefined && msg.length>0) {
-			sendBusMessage(msg);
+			sendMessage(msg);
 		}
     });
 
-    $('#btnLightsOn').click(function(e){
-    	e.preventDefault();
-    	 var msgVal = 0;
-    	 var checked = $('.chklight:checked');
-    	 if(checked!==undefined){
-    	 	for (var i = 0; i < checked.length; i++) {
-    	 		msgVal += parseInt($(checked[i]).val());
-    	 	}
-    	 }
-    	 sendBusMessage('00 BF 76 ' + msgVal.toString(16));
-    });
-
-    $('#btnLightsOff').click(function(e){
-    	e.preventDefault();
-    	sendBusMessage('00 BF 76 00');
-    });
-
-    $('#btnLightsFlash').click(function(e){
-    	e.preventDefault();
-		  sendBusMessage('80 BF 11 03');
-    });
-
-    function sendBusMessage(msg) {
-  		socket.emit('send bus message', msg);
+    function sendMessage(msg) {
+  		socket.emit('send message', msg);
   		displayInLog('message sent: ' + msg + '</br>');
     }
 
     function parseStatusUpdate(msg){
+			console.log(msg);
     	var data=msg.favorite;
     	var $parentCol = $favoritecol;
     	if(msg['favorite']!==undefined){ }
