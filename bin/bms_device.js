@@ -4,7 +4,7 @@ var SerialPort = require('serialport');
 //var baasic = require('./baasic');
 
 // config
-var device = 'COM22'; //Serial port
+var device = 'COM20'; //Serial port
 var deviceId = 'bms01'; //device id on network
 
 // setup interface
@@ -12,12 +12,8 @@ var serialInterface = new SerialPort(device, {
 	baudRate: 9600,
 	dataBits: 8,
 	stopBits: 1,
-	parity: 'even',
-	xon: false,
-	xoff: false,
-	rtscts: false,
-	autoOpen: false,
-	parser: SerialPort.parsers.raw
+	parity: 'none',
+	autoOpen: false
 });
 serialInterface.open();
 
@@ -35,11 +31,11 @@ function onSignalInt() {
 
 // events
 serialInterface.on('open', function (err) {
-	evEmitter.emit('device', "connected " + deviceId)
-	console.log("connected " + deviceId);
+	evEmitter.emit('device', 'connected ' + deviceId)
+	console.log('connected ' + deviceId);
 });
 serialInterface.on('data', onSerialData);
-serialInterface.on("error", function (error) {
+serialInterface.on('error', function (error) {
 	console.log(error);
 });
 
@@ -81,12 +77,12 @@ function writeMessageToSerial() {
 		msg.status = 1; //sending message
 		var hexMessageWithSpaces = toHexString(msg.content);
 		evEmitter.emit('msg sent: ', hexMessageWithSpaces);
-		console.log('sent: ' + hexMessageWithSpaces);
+		//console.log('sent: ' + hexMessageWithSpaces);
 	}
 }
 
 function realtimeMonitor() {
-	var resolution = 500; //miliseconds - min: 250 ms
+	var resolution = 250; //miliseconds
 	//Send messages
 	if (msgQueue.length === 0) {
 		queueMessage(messages_const.getInfo03());
@@ -110,9 +106,9 @@ function updateBuffer(dataBuff) {
 	}
 
 	if (allBuffer.length > 4) {
-		if (allBuffer[0] === 221 && dataBuff[dataBuff.length-1] === 119) { //DD A5 (5A) LL LL ... 77
+		if (allBuffer[0] === 221 && dataBuff[dataBuff.length - 1] === 119) { //DD A5 (5A) LL LL ... 77
 			var mlen = (allBuffer[2] * (16 * 16)) + (allBuffer[3]);
-			console.log("len: " + mlen + "..." + toHexString(allBuffer));
+			//console.log('len: ' + mlen + '...' + toHexString(allBuffer));
 			if (mlen > 0 && allBuffer.length >= mlen + 7) {
 				evEmitter.emit('bmsmessage', toHexString(allBuffer));
 
@@ -133,9 +129,9 @@ function updateBuffer(dataBuff) {
 		}
 	}
 
-	if (dataBuff[dataBuff.length-1] === 119 && allBuffer.length > 0 && (allBuffer[0] !== 221 && allBuffer[1] !== 165)) { //77
+	if (dataBuff[dataBuff.length - 1] === 119 && allBuffer.length > 0 && (allBuffer[0] !== 221 && allBuffer[1] !== 165)) { //77
 		evEmitter.emit('bmsmessage', toHexString(allBuffer));
-		console.log('unknown : ' + toHexString(allBuffer));
+		//console.log('unknown : ' + toHexString(allBuffer));
 		allBuffer = new Buffer(0);
 	}
 
@@ -151,24 +147,39 @@ function updateBuffer(dataBuff) {
 }
 
 function decodeInfo03(messageArray, len) {
-	emitStatus("packV", ((messageArray[5] * 16 * 16 + messageArray[6]) / 1000).toFixed(2));
-	emitStatus("currentA", messageArray[7] * 16 * 16 + messageArray[8]);
+	var result = {};
+	result['packV'] = ((messageArray[5] * 16 * 16 + messageArray[6]) / 1000).toFixed(2);
+	result['currentA'] = messageArray[7] * 16 * 16 + messageArray[8];
 
-	emitStatus("temp1", getTemp(messageArray[27] * 16 * 16 + messageArray[28]));
-	emitStatus("temp2", getTemp(messageArray[29] * 16 * 16 + messageArray[30]));
+	result['temp1'] = getTemp(messageArray[27] * 16 * 16 + messageArray[28]);
+	result['temp2'] = getTemp(messageArray[29] * 16 * 16 + messageArray[30]);
+
+	result['remaining'] = messageArray[9] * 16 * 16 + messageArray[10]
+	result['full'] = messageArray[11] * 16 * 16 + messageArray[12];
+
+	emitStatus('general', result);
 }
 
 function decodeInfo04(messageArray, len) {
 	var count = len / 2;
+	var result = {};
+	result['count'] = count;
 	for (var i = 0; i < count; i++) {
 		var index = (i * 2) + 4;
 		var cellV = (messageArray[index] * (16 * 16)) + (messageArray[index + 1]);
-		emitStatus("cell" + padLeft((i + 1).toString(), 2), (cellV / 1000.000).toFixed(3));
+		result['cell' + padLeft((i + 1).toString(), 3)] = (cellV / 1000.000).toFixed(3);
 	}
+	emitStatus('cell', result);
 }
 
 function decodeInfo05(messageArray, len) {
-	//TODO
+	var result = {};
+	var msg = '';
+	for (var i = 0; i < messageArray.length; i++) {
+		msg.push(messageArray[i].toString());
+	}
+	result['name'] = msg.join('');
+	emitStatus('info', result);
 }
 
 function getTemp(kelvin10) {
@@ -179,20 +190,13 @@ function getTemp(kelvin10) {
 //emits an array of statuses
 function emitStatus(k, v) {
 	var d = new Date();
-	if (statusAll !== undefined) {
-		var result = statusAll[k];
-		if (result === undefined || Math.abs(result - v) > 0.002) {
-			statusAll[k] = v;
-			evEmitter.emit('status update', [
-				[k, v]
-			]);
-		}
-	}
-	//baasic.emitBaasic(k, v);
+	var result = {};
+	result[k] = v;
+	evEmitter.emit('status update', result);
 }
 
 function padLeft(s, n) {
-	return String("0".repeat(n + 1) + s).slice(-n);
+	return String('0'.repeat(n + 1) + s).slice(-n);
 }
 
 function toHexString(bArray) {

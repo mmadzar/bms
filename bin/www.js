@@ -39,8 +39,7 @@ app.evEmitter.on('bmsmessage', function (data) {
   //io.emit('chat message', dt.toJSON() + '\t' + data);
 });
 app.evEmitter.on('status update', function (data) {
-  var dt = new Date();
-  io.emit('status update', dt.toJSON() + '\t' + data);
+  io.emit('status update', data);
 });
 
 /**
