@@ -17,12 +17,13 @@ var serialInterface = new SerialPort(device, {
 	xoff: false,
 	rtscts: false,
 	autoOpen: false,
+	parser: SerialPort.parsers.raw
 });
 serialInterface.open();
 
 var evEmitter;
 var msgQueue = [];
-var allBuffer = []; //temporary buffer collection
+var allBuffer = new Buffer(0); //temporary buffer collection
 var statusAll = []; //status object (key, value) with values
 
 // cleanup
@@ -38,13 +39,13 @@ serialInterface.on('open', function (err) {
 	console.log("connected " + deviceId);
 });
 serialInterface.on('data', onSerialData);
-serialInterface.on("error", function(error){
-    console.log(error);
+serialInterface.on("error", function (error) {
+	console.log(error);
 });
 
 function onSerialData(data) {
-	//evEmitter.emit('bmsdata', data); //original bus message
 	collectBuffer(data);
+	evEmitter.emit('bmsdata', data); //original bus message
 }
 
 function queueMessage(hexMessageWithSpaces) {
@@ -63,7 +64,6 @@ function queueMessage(bufferMessage) {
 			content: bufferMessage,
 			status: 0
 		}); //add message to queue with default status
-		console.log('queued: ');
 	}
 	if (msgQueue.length > 0) {
 		writeMessageToSerial(msgQueue[0]);
@@ -73,7 +73,7 @@ function queueMessage(bufferMessage) {
 function writeMessageToSerial() {
 	var msg = msgQueue[0];
 	if (msg !== undefined && msg.status === 0) {
-		serialInterface.write(msg.content, function (err) {
+		serialInterface.write(new Buffer(msg.content), function (err) {
 			if (err) {
 				console.log('Error on writing to serial. ' + err);
 			}
@@ -98,47 +98,27 @@ function realtimeMonitor() {
 }
 
 function collectBuffer(data) {
-	var dt = new Date();
-	//var msg = dt.toUTCString() + '\t';
-	if (data.len === 1) {
-		//msg = msg + data.toString(16);
-		updateBuffer(data);
-	} else {
-		//msg = msg + toHexString(data);
-		for (var i = 0; i < data.length; i++) {
-			updateBuffer(data[i]);
-		}
-	}
+	updateBuffer(data);
 }
 
-function updateBuffer(dataItem) {
+function updateBuffer(dataBuff) {
 	//Collect buffer and compose message
-	if (allBuffer.length === 0 && dataItem !== 221) {
-		console.log('skip push ' + dataItem.toString(16));
-	} else if (allBuffer.length === 1 && dataItem === 221) {
-		//clear to fix errors
-		allBuffer = [];
-	}
-	console.log('push ' + dataItem + ' - ' + dataItem.toString(16));
-	allBuffer.push(dataItem);
-
-	if (allBuffer.length % 256 === 0) {
-		//console.log('big buffer: ' + toHexString(allBuffer));
+	if (allBuffer.length > 0) {
+		allBuffer = Buffer.concat([allBuffer, dataBuff]);
+	} else {
+		allBuffer = new Buffer(dataBuff);
 	}
 
-	//console.log(toHexString(allBuffer));
 	if (allBuffer.length > 4) {
-		if (allBuffer[0] === 221 /* && (allBuffer[1] === 165 || allBuffer[1] === 90)*/ && dataItem === 119) { //DD A5 (5A) LL LL ... 77
+		if (allBuffer[0] === 221 && dataBuff[dataBuff.length-1] === 119) { //DD A5 (5A) LL LL ... 77
 			var mlen = (allBuffer[2] * (16 * 16)) + (allBuffer[3]);
 			console.log("len: " + mlen + "..." + toHexString(allBuffer));
 			if (mlen > 0 && allBuffer.length >= mlen + 7) {
 				evEmitter.emit('bmsmessage', toHexString(allBuffer));
-				console.log('serial msg: ' + toHexString(allBuffer));
 
 				//Handle message
 				var buffMsg = msgQueue[0];
 				if (buffMsg !== undefined && buffMsg.status === 1) {
-					console.log('queue shift')
 					msgQueue.shift();
 					if (buffMsg.content.equals(messages_const.getInfo03())) {
 						decodeInfo03(allBuffer, mlen);
@@ -148,15 +128,15 @@ function updateBuffer(dataItem) {
 						decodeInfo05(allBuffer, mlen);
 					}
 				}
-				allBuffer = [];
+				allBuffer = new Buffer(0);
 			}
 		}
 	}
 
-	if (dataItem === 119 && allBuffer.length > 0 && (allBuffer[0] !== 221 && allBuffer[1] !== 165)) { //77
+	if (dataBuff[dataBuff.length-1] === 119 && allBuffer.length > 0 && (allBuffer[0] !== 221 && allBuffer[1] !== 165)) { //77
 		evEmitter.emit('bmsmessage', toHexString(allBuffer));
 		console.log('unknown : ' + toHexString(allBuffer));
-		allBuffer = [];
+		allBuffer = new Buffer(0);
 	}
 
 	if (allBuffer.length === 0) {
@@ -165,10 +145,7 @@ function updateBuffer(dataItem) {
 			msgQueue.shift();
 		}
 		if (msgQueue.length > 0) {
-			//console.log('write to serial')
 			writeMessageToSerial();
-		} else {
-			//console.log('no queue')
 		}
 	}
 }
