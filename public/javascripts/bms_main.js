@@ -4,7 +4,7 @@ jQuery(function ($) {
 	var $messageslist = $('#messageslist');
 	var $generalcol = $('#generalcol');
 	var $cellcol = $('#cellcol');
-	var $infowndscol = $('#infocol');
+	var $infocol = $('#infocol');
 
 	socket.on('disconnect', function (reason) {
 		var dt = new Date();
@@ -31,7 +31,8 @@ jQuery(function ($) {
 	}
 
 	function parseStatusUpdate(msg) {
-		var data = msg.favorite;
+		var data = {};
+		$infocol.find("#timestamp").text(msg.timestamp);
 		var $parentCol = $cellcol;
 		if (msg['general'] !== undefined) {
 			$parentCol = $generalcol;
@@ -61,9 +62,12 @@ jQuery(function ($) {
 	}
 
 	function generateCellTable(itemsCount) {
-		var elems = '';
+		var elems='';
+		var cellcount='';
 		for (var i = 0; i < itemsCount; i++) {
-			elems = elems + '<tr><td><label id=cell' + String("0".repeat(4) + (i + 1).toString()).slice(-3) + '></label></td></tr>';
+			cellcount=String("0".repeat(4) + (i + 1).toString()).slice(-3);
+			elems = elems + '<div class="col-md-3"><h3><label id=cell' + cellcount + ' class="label label-primary"></label></h3><span class="badge">' + cellcount + 
+			'</span></div>';
 		}
 		$cellcol.html(elems);
 	}

@@ -20,7 +20,7 @@ serialInterface.open();
 var evEmitter;
 var msgQueue = [];
 var allBuffer = new Buffer(0); //temporary buffer collection
-var statusAll = []; //status object (key, value) with values
+var statusAll = {}; //status object with stored values
 
 // cleanup
 process.on('SIGINT', onSignalInt);
@@ -148,14 +148,14 @@ function updateBuffer(dataBuff) {
 
 function decodeInfo03(messageArray, len) {
 	var result = {};
-	result['packV'] = ((messageArray[5] * 16 * 16 + messageArray[6]) / 1000).toFixed(2);
-	result['currentA'] = messageArray[7] * 16 * 16 + messageArray[8];
+	result['packV'] = ((messageArray[4] * 16 * 16 + messageArray[5]) / 1000).toFixed(2);
+	result['currentA'] = messageArray[6] * 16 * 16 + messageArray[7];
 
 	result['temp1'] = getTemp(messageArray[27] * 16 * 16 + messageArray[28]);
 	result['temp2'] = getTemp(messageArray[29] * 16 * 16 + messageArray[30]);
 
-	result['remaining'] = messageArray[9] * 16 * 16 + messageArray[10]
-	result['full'] = messageArray[11] * 16 * 16 + messageArray[12];
+	result['remaining'] = (messageArray[8] * 16 * 16 + messageArray[9])*10;
+	result['full'] = (messageArray[10] * 16 * 16 + messageArray[11])*10;
 
 	emitStatus('general', result);
 }
@@ -187,12 +187,33 @@ function getTemp(kelvin10) {
 	return tempC.toFixed(2);
 }
 
-//emits an array of statuses
+//emits an array of statuses - TODO Cleanup
 function emitStatus(k, v) {
-	var d = new Date();
-	var result = {};
-	result[k] = v;
-	evEmitter.emit('status update', result);
+	var result = undefined;
+	var inMemValues = statusAll[k];
+	var tKey = '';
+	var tVal = '';
+	if (inMemValues === undefined) {
+		result = v;
+		statusAll[k] = v;
+	} else {
+		result = {};
+		for (var i = 0; i < Object.keys(v).length; i++) {
+			tKey = Object.keys(v)[i];
+			tVal = v[tKey];
+			if (inMemValues[tKey] !== tVal) {
+				inMemValues[tKey] = tVal;
+				result[tKey] = tVal;
+			}
+		}
+	}
+	if (Object.keys(result).length > 0) {
+		var d = new Date();
+		var output={};
+		output[k]=result;
+		output['timestamp'] = d.toString().substr(0,24);
+		evEmitter.emit('status update', output);
+	}
 }
 
 function padLeft(s, n) {
@@ -230,5 +251,9 @@ module.exports = {
 	sendMessage: function (msgstring) {
 		realtimeMonitor();
 		//sendSerialMessage(msgstring);
+	},
+
+	resetInMemoryStatus: function(){
+		statusAll={};
 	},
 };

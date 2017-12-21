@@ -27,6 +27,7 @@ var io = require('socket.io')(server);
 io.on('connection', function (socket) {
   console.log('user connected');
   var dt = new Date();
+  app.bms.resetInMemoryStatus();
   io.emit('chat message',  dt.toJSON() + '\t' + 'io ready.');
   socket.on('send message', function (msg) {
     app.bms.sendMessage(msg);

@@ -1,21 +1,23 @@
 {
   "name": "bms",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
   },
   "dependencies": {
     "body-parser": "",
+    "bootstrap": "^3.3.7",
+    "bootstrap3": "^3.3.5",
     "cookie-parser": "",
     "debug": "",
     "express": "",
+    "ibus": "",
     "morgan": "",
     "node-sass-middleware": "",
+    "popper.js": "^1.12.9",
     "pug": "",
     "serve-favicon": "",
-    "ibus": "",
-    "socket.io": "",
-    "baasic-sdk-nodejs": "0.0.1-alpha.2"
+    "socket.io": ""
   }
 }
