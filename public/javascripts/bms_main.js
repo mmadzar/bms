@@ -66,7 +66,7 @@ jQuery(function ($) {
 		var cellcount='';
 		for (var i = 0; i < itemsCount; i++) {
 			cellcount=String("0".repeat(4) + (i + 1).toString()).slice(-3);
-			elems = elems + '<div class="col-xs-4 col-md-1"><h3><label id=cell' + cellcount + ' class="label label-primary"></label></h3><span class="badge">' + cellcount + '</span></div>';
+			elems = elems + '<div class="col-xs-4 col-md-1"><h3><label id=cell' + cellcount + ' class="label label-primary"></label></h3><label class="label label-default">' + cellcount + '</label></div>';
 		}
 		$cellcol.html(elems);
 	}

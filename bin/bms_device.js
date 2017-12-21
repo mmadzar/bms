@@ -1,3 +1,4 @@
+var fs = require('fs');
 var path = require('path');
 var messages_const = new require('./messages.js')
 var SerialPort = require('serialport');
@@ -154,8 +155,8 @@ function decodeInfo03(messageArray, len) {
 	result['temp1'] = getTemp(messageArray[27] * 16 * 16 + messageArray[28]);
 	result['temp2'] = getTemp(messageArray[29] * 16 * 16 + messageArray[30]);
 
-	result['remaining'] = (messageArray[8] * 16 * 16 + messageArray[9])*10;
-	result['full'] = (messageArray[10] * 16 * 16 + messageArray[11])*10;
+	result['remaining'] = (messageArray[8] * 16 * 16 + messageArray[9]) * 10;
+	result['full'] = (messageArray[10] * 16 * 16 + messageArray[11]) * 10;
 
 	emitStatus('general', result);
 }
@@ -189,6 +190,7 @@ function getTemp(kelvin10) {
 
 //emits an array of statuses - TODO Cleanup
 function emitStatus(k, v) {
+	logToFile(k, v);
 	var result = undefined;
 	var inMemValues = statusAll[k];
 	var tKey = '';
@@ -209,11 +211,30 @@ function emitStatus(k, v) {
 	}
 	if (Object.keys(result).length > 0) {
 		var d = new Date();
-		var output={};
-		output[k]=result;
-		output['timestamp'] = d.toString().substr(0,24);
+		var output = {};
+		output[k] = result;
+		output['timestamp'] = d.toString().substr(0, 24);
 		evEmitter.emit('status update', output);
 	}
+}
+
+function logToFile(k, v) {
+	var d = new Date();
+	var filename = 'logs/' + d.toISOString().substr(0, 13).replace(/-/g, '') + '_log_' + k + '.csv';
+
+	var content = d.toISOString() + ';';
+	for (var i = 0; i < Object.keys(v).length; i++) {
+		content = content + v[Object.keys(v)[i]] + ';';
+	}
+	content = content + '\n';
+	fs.appendFile(filename, content, function (err) {
+		if (err) {
+			if (!fs.existsSync('logs')){
+				fs.mkdirSync('logs');
+			}
+			console.log(err);
+		}
+	});
 }
 
 function padLeft(s, n) {
@@ -253,7 +274,7 @@ module.exports = {
 		//sendSerialMessage(msgstring);
 	},
 
-	resetInMemoryStatus: function(){
-		statusAll={};
+	resetInMemoryStatus: function () {
+		statusAll = {};
 	},
 };
