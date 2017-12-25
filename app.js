@@ -1,5 +1,7 @@
 var express = require('express');
+var fs = require('fs');
 var path = require('path');
+var settings = require('./bin/settings');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
@@ -9,9 +11,11 @@ var sassMiddleware = require('node-sass-middleware');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
+//config settings - load settings from file
+settings.load();
+
 var app = express();
 
- 
 // Baasic
 //var baasicApp = new baasic.BaasicApp('showcase-raspberrypi-bmw');
 
@@ -22,8 +26,8 @@ const evEmitter = new CarCtrlEmitter();
 console.log('EventEmitter created.');
 
 // BMS dependencies and settings.
-const bms = require('./bin/bms_device.js');
-bms.init(evEmitter, 'COM21'/*, baasicApp*/);
+var Bms = require('./bin/bmsdevice.js');
+const bms = new Bms(settings, evEmitter);
 
 // view engine setup - HTML
 app.use(express.static(__dirname + '/public'));
@@ -34,7 +38,9 @@ app.set('view engine', 'pug');
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 app.use(cookieParser());
 app.use(sassMiddleware({
   src: path.join(__dirname, 'public'),
@@ -48,14 +54,14 @@ app.use('/', index);
 app.use('/users', users);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

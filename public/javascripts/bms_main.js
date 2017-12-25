@@ -8,7 +8,7 @@ jQuery(function ($) {
 
 	socket.on('disconnect', function (reason) {
 		var dt = new Date();
-		displayInLog(dt.toUTCString() + '\t' + 'io error: ' + reason + '</br>');
+		displayInLog(dt.toJSON() + '\t' + 'io error: ' + reason + '</br>');
 	});
 	socket.on('chat message', function (msg) {
 		displayInLog(msg + '</br>');
@@ -25,9 +25,18 @@ jQuery(function ($) {
 		}
 	});
 
+	$('#btnStartMonitor').click(function (e) {
+		e.preventDefault();
+		socket.emit('start monitor');
+	});
+
+	$('#btnStopMonitor').click(function (e) {
+		e.preventDefault();
+		socket.emit('stop monitor');
+	});
+
 	function sendMessage(msg) {
 		socket.emit('send message', msg);
-		displayInLog('message sent: ' + msg + '</br>');
 	}
 
 	function parseStatusUpdate(msg) {
@@ -62,10 +71,10 @@ jQuery(function ($) {
 	}
 
 	function generateCellTable(itemsCount) {
-		var elems='';
-		var cellcount='';
+		var elems = '';
+		var cellcount = '';
 		for (var i = 0; i < itemsCount; i++) {
-			cellcount=String("0".repeat(4) + (i + 1).toString()).slice(-3);
+			cellcount = String("0".repeat(4) + (i + 1).toString()).slice(-3);
 			elems = elems + '<div class="col-xs-4 col-md-1"><h3><label id=cell' + cellcount + ' class="label label-primary"></label></h3><label class="label label-default">' + cellcount + '</label></div>';
 		}
 		$cellcol.html(elems);

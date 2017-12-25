@@ -12,4 +12,14 @@ router.post('/sendmessage', function (req, res) {
   res.send(null);
 })
 
+router.post('/startmonitor', function (req, res) {
+	console.log('startmonitor', req.body);
+  res.send(null);
+})
+
+router.post('/stopmonitor', function (req, res) {
+	console.log('stopmonitor', req.body);
+  res.send(null);
+})
+
 module.exports = router;

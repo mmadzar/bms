@@ -28,18 +28,38 @@ io.on('connection', function (socket) {
   console.log('user connected');
   var dt = new Date();
   app.bms.resetInMemoryStatus();
-  io.emit('chat message',  dt.toJSON() + '\t' + 'io ready.');
+  io.emit('chat message', dt.toJSON() + '\t' + 'io ready.');
   socket.on('send message', function (msg) {
     app.bms.sendMessage(msg);
+  });
+  socket.on('start monitor', function (msg) {
+    var dt1 = new Date();
+    app.bms.startMonitor();
+    io.emit('chat message', dt1.toJSON() + '\tmonitor started.');
+  });
+  socket.on('stop monitor', function (msg) {
+    var dt2 = new Date();
+    app.bms.stopMonitor();
+    io.emit('chat message', dt2.toJSON() + '\tmonitor stopped.');
   });
 });
 
 //The Emitter events
-app.evEmitter.on('bmsmessage', function (data) {
-  var dt = new Date();
-  //io.emit('chat message', dt.toJSON() + '\t' + data);
+app.evEmitter.on('sent', function (data) {
+  // all messages to serial (including monitor)
+  // var dt = new Date();
+  // io.emit('chat message', dt.toJSON() + '\t' + data);
 });
-app.evEmitter.on('status update', function (data) {
+app.evEmitter.on('msgsent', function (data) {
+  // only messages sent by user
+  var dt = new Date();
+  io.emit('chat message', dt.toJSON() + '\tsend\t' + data.toString('hex'));
+});
+app.evEmitter.on('device', function (data) {
+  var dt = new Date();
+  io.emit('chat message', dt.toJSON() + '\t' + data);
+});
+app.evEmitter.on('status', function (data) {
   io.emit('status update', data);
 });
 
