@@ -83,4 +83,33 @@ jQuery(function ($) {
 	function displayInLog(msg) {
 		$messageslist.prepend(msg);
 	}
+
+	//menu navigation
+	$('.navigation').on('click', function (e) {
+		if (e.target.href.endsWith("#statuslink")) {
+			showMonitor();
+		} else if (e.target.href.endsWith("#debuglink")) {
+			showDebug();
+		}
+	})
+	$('#header-swipe').on("swipeleft", function (e) {
+		showMonitor();
+	})
+	$('#header-swipe').on("swiperight", function (e) {
+		showDebug();
+	})
+
+	function showMonitor() {
+		$('#debuggroup').hide();
+		$('#monitorgroup').show();
+		$('#menustatus').addClass('active');
+		$('#menudebug').removeClass('active');
+	}
+
+	function showDebug() {
+		$('#monitorgroup').hide();
+		$('#debuggroup').show();
+		$('#menustatus').removeClass('active');
+		$('#menudebug').addClass('active');
+	}
 });
