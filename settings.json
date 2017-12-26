@@ -1,9 +1,0 @@
- {
-    "deviceId": "bms01",
-    "portAddress": "COM20",
-    "monitor": {
-        "refreshInterval": 300,
-        "autoStart": false,
-        "logToFile": false
-    }
-} 
