@@ -47,7 +47,7 @@ var BMSdevice = function (settings, evEmitter) {
 	function decodeInfo03(messageArray) {
 		var result = {};
 		result['packV'] = ((messageArray[4] * 16 * 16 + messageArray[5]) / 100).toFixed(2);
-		result['currentA'] = messageArray[6] * 16 * 16 + messageArray[7];
+		result['currentA'] = ((messageArray[6] * 16 * 16 + messageArray[7]) /100).toFixed(2);
 
 		result['temp1'] = getTemp(messageArray[27] * 16 * 16 + messageArray[28]);
 		result['temp2'] = getTemp(messageArray[29] * 16 * 16 + messageArray[30]);
