@@ -1,6 +1,7 @@
  {
     "deviceId": "bms01",
     "portAddress": "COM20",
+    "bluetoothAddress": "00:15:83:00:71:11",
     "monitor": {
         "refreshInterval": 300,
         "autoStart": false,

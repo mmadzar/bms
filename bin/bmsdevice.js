@@ -2,14 +2,19 @@ var fs = require('fs'),
 	path = require('path'),
 	messages_const = new require('./messages'),
 	serialBMS = require('./serialbms');
-//var baasic = require('./baasic');
+bluetoothBMS = require('./bluetoothbms');
 
 var BMSdevice = function (settings, evEmitter) {
 
 	var monitorTimer = {};
 	var statusAll = {}; //status object with stored values
 
-	var serial = new serialBMS(settings, evEmitter);
+	var serial = {};
+	if (settings.portAddress === "") {
+		serial = new serialBMS(settings, evEmitter);
+	} else {
+		serial = new bluetoothBMS(settings, evEmitter);
+	}
 
 	function runMonitor() {
 		var resolution = settings.monitor.refreshInterval; //miliseconds
@@ -47,7 +52,7 @@ var BMSdevice = function (settings, evEmitter) {
 	function decodeInfo03(messageArray) {
 		var result = {};
 		result['packV'] = ((messageArray[4] * 16 * 16 + messageArray[5]) / 100).toFixed(2);
-		result['currentA'] = ((messageArray[6] * 16 * 16 + messageArray[7]) /100).toFixed(2);
+		result['currentA'] = ((messageArray[6] * 16 * 16 + messageArray[7]) / 100).toFixed(2);
 
 		result['temp1'] = getTemp(messageArray[27] * 16 * 16 + messageArray[28]);
 		result['temp2'] = getTemp(messageArray[29] * 16 * 16 + messageArray[30]);
@@ -73,7 +78,7 @@ var BMSdevice = function (settings, evEmitter) {
 	function decodeInfo05(messageArray) {
 		var result = {};
 		var msg = [];
-		for (var i = 0+4; i < messageArray.length-4; i++) { //skip message start and end
+		for (var i = 0 + 4; i < messageArray.length - 4; i++) { //skip message start and end
 			msg.push(String.fromCharCode(messageArray[i]));
 		}
 		result['name'] = msg.join('');
@@ -161,9 +166,9 @@ var BMSdevice = function (settings, evEmitter) {
 	//Exported functions
 	this.sendMessage = function (msgHexStringWithSpaces) {
 		var arrMsg = msgHexStringWithSpaces.split(' ');
-		var result=new Buffer(arrMsg.length);
+		var result = new Buffer(arrMsg.length);
 		for (var i = 0; i < arrMsg.length; i++) {
-			 result[i]=parseInt(arrMsg[i], 16);
+			result[i] = parseInt(arrMsg[i], 16);
 		}
 		serial.sendMessage(result);
 		evEmitter.emit('msgsent', result);

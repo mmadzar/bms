@@ -1,7 +1,7 @@
 var SerialPort = require('serialport');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-
+	
 var SerialBMS = function (settings, evEmitter) {
     var _self = this;
 
@@ -11,7 +11,7 @@ var SerialBMS = function (settings, evEmitter) {
 
     // setup interface
     var serialInterface = new SerialPort(device, {
-        baudRate: 9600,
+        baudRate: 115200,
         dataBits: 8,
         stopBits: 1,
         parity: 'none',
@@ -34,7 +34,7 @@ var SerialBMS = function (settings, evEmitter) {
     });
 
     function onSerialData(data) {
-        collectBuffer(data);
+        updateBuffer(data);
         evEmitter.emit('bmsdata', data); //original bus message
     }
 
@@ -63,6 +63,7 @@ var SerialBMS = function (settings, evEmitter) {
     function writeMessageToSerial() {
         var msg = msgQueue[0];
         if (msg !== undefined && msg.status === 0) {
+            //console.log('write: ' + JSON.stringify(msg));
             serialInterface.write(new Buffer(msg.content), function (err) {
                 if (err) {
                     console.log('Error on writing to serial. ' + err);
@@ -71,10 +72,6 @@ var SerialBMS = function (settings, evEmitter) {
             msg.status = 1; //sending message
             _self.emit('sent', msg.content);
         }
-    }
-
-    function collectBuffer(data) {
-        updateBuffer(data);
     }
 
     function updateBuffer(dataBuff) {
