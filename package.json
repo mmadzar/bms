@@ -1,6 +1,6 @@
 {
   "name": "bms",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -11,14 +11,14 @@
     "cookie-parser": "",
     "debug": "",
     "express": "",
-    "serialport": "",
     "jquery-mobile": "^1.5.0-alpha.1",
     "morgan": "",
+    "noble": "",
     "node-sass-middleware": "",
     "popper.js": "^1.12.9",
     "pug": "",
+    "serialport": "^6.0.4",
     "serve-favicon": "",
-    "socket.io": "",
-    "noble": ""
+    "socket.io": ""
   }
 }
