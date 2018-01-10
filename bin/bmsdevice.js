@@ -1,8 +1,8 @@
 var fs = require('fs'),
 	path = require('path'),
 	messages_const = new require('./messages'),
-	serialBMS = require('./serialbms');
-bluetoothBMS = require('./bluetoothbms');
+	serialBMS = require('./serialbms'),
+	bluetoothBMS = require('./bluetoothbms');
 
 var BMSdevice = function (settings, evEmitter) {
 
