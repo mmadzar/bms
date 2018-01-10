@@ -11,9 +11,9 @@ var BMSdevice = function (settings, evEmitter) {
 
 	var serial = {};
 	if (settings.portAddress === "") {
-		serial = new serialBMS(settings, evEmitter);
-	} else {
 		serial = new bluetoothBMS(settings, evEmitter);
+	} else {
+		serial = new serialBMS(settings, evEmitter);
 	}
 
 	function runMonitor() {
