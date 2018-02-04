@@ -143,6 +143,7 @@ jQuery(function ($) {
 
 var myChart;
 var option;
+var gaugeStatus = {};
 
 function setGauges(elementId) {
 	var voltsMin = 2.0 * 46,
@@ -557,11 +558,17 @@ function setGauges(elementId) {
 
 function setGaugeData(general) {
 	if (general !== undefined) {
-		option.series[0].data[0].value = general.packV * general.currentA / 1000; //kW
-		option.series[1].data[0].value = general.currentA; //Amps
-		option.series[2].data[0].value = general.remaining / general.full * 10; //battery
-		option.series[3].data[0].value = general.packV; //volts
-		option.series[4].data[0].value = general.temp1; //temp
+		if (general.currentA !== undefined || general.packV !== undefined) {
+			option.series[0].data[0].value = general.packV * general.currentA / 1000; //kW
+			option.series[1].data[0].value = general.currentA; //Amps
+			option.series[3].data[0].value = general.packV; //volts
+		}
+		if (general.remaining !== undefined || general.full !== undefined) {
+			option.series[2].data[0].value = general.remaining / general.full * 10; //battery
+		}
+		if (general.temp1 !== undefined) {
+			option.series[4].data[0].value = general.temp1; //temp
+		}
 		myChart.setOption(option, true);
 	}
 }
