@@ -21,7 +21,7 @@ var BMSdevice = function (settings, evEmitter) {
 		//Send messages
 		if (serial.isReady()) {
 			serial.sendMessage(messages_const.getInfo03());
-			serial.sendMessage(messages_const.getInfo04());
+			//serial.sendMessage(messages_const.getInfo04());
 		}
 		monitorTimer = setTimeout(function () {
 			runMonitor();
