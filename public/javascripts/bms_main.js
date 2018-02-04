@@ -568,7 +568,7 @@ function setGaugeData(general) {
 			};
 		});
 		for (var i = arr.length - 1; i >= 0; i--) {
-			gaugeStatus[arr[i].k] = arr[i];
+			gaugeStatus[arr[i].k] = arr[i].v;
 		}
 	}
 	if (general !== undefined) {
