@@ -46,6 +46,8 @@ jQuery(function ($) {
 		if (msg['general'] !== undefined) {
 			$parentCol = $generalcol;
 			data = msg.general;
+			//update gauges
+			setGaugeData(data);
 		} else if (msg['cell'] !== undefined) {
 			$parentCol = $cellcol;
 			data = msg.cell;

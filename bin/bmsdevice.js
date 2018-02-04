@@ -2,7 +2,7 @@ var fs = require('fs'),
 	path = require('path'),
 	messages_const = new require('./messages'),
 	serialBMS = require('./serialbms');
-	bluetoothBMS = require('./bluetoothbms');
+bluetoothBMS = require('./bluetoothbms');
 
 var BMSdevice = function (settings, evEmitter) {
 
@@ -16,12 +16,15 @@ var BMSdevice = function (settings, evEmitter) {
 		serial = new serialBMS(settings, evEmitter);
 	}
 
+	//TODO Add timer for file logs
 	function runMonitor() {
 		var resolution = settings.monitor.refreshInterval; //miliseconds
 		//Send messages
 		if (serial.isReady()) {
 			serial.sendMessage(messages_const.getInfo03());
-			//serial.sendMessage(messages_const.getInfo04());
+			if (settings.logToFile) {
+				serial.sendMessage(messages_const.getInfo04());
+			}
 		}
 		monitorTimer = setTimeout(function () {
 			runMonitor();
