@@ -88,7 +88,7 @@ jQuery(function ($) {
 	$('.navigation').on('click', function (e) {
 		var elName = e.target.href.split('#')[1];
 		var groupEl = '#' + elName.replace('link', 'group');
-		showTab($(groupEl).attr('index'));
+		showTab(parseInt($(groupEl).attr('index')));
 	});
 
 	$('#header-swipe').on("swipeleft", function (e) {
