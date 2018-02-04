@@ -141,6 +141,8 @@ jQuery(function ($) {
 
 });
 
+var myChart;
+var option;
 
 function setGauges(elementId) {
 	var voltsMin = 2.0 * 46,
@@ -150,8 +152,8 @@ function setGauges(elementId) {
 		kwMin = -25,
 		kwMax = 45;
 
-	var myChart = echarts.init(document.getElementById(elementId));
-	var option = {
+	myChart = echarts.init(document.getElementById(elementId));
+	option = {
 		backgroundColor: '#1b1b1b',
 		tooltip: {
 			formatter: "{a} <br/>{c} {b}"
@@ -553,17 +555,13 @@ function setGauges(elementId) {
 	}
 }
 
-function setGaugeData() {
-	var volts = 122,
-		amps = 100,
-		totalAh = 2900,
-		currentAh = 500,
-		tempC = 16;
-
-	option.series[0].data[0].value = volts * amps / 1000; // getRandomInt(kwMin, kwMax); //kW
-	option.series[1].data[0].value = amps; // getRandomInt(ampsMin, ampsMax); //Amps
-	option.series[2].data[0].value = currentAh / totalAh * 10; //getRandomInt(0, 10); //battery
-	option.series[3].data[0].value = volts; //getRandomInt(voltsMin, voltsMax); //volts
-	option.series[4].data[0].value = tempC; //getRandomInt(-100, 900) / 10; //temp
-	myChart.setOption(option, true);
+function setGaugeData(general) {
+	if (general !== undefined) {
+		option.series[0].data[0].value = general.packV * general.currentA / 1000; //kW
+		option.series[1].data[0].value = general.currentA; //Amps
+		option.series[2].data[0].value = general.remaining / general.full * 10; //battery
+		option.series[3].data[0].value = general.packV; //volts
+		option.series[4].data[0].value = general.temp1; //temp
+		myChart.setOption(option, true);
+	}
 }
