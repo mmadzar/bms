@@ -1,7 +1,7 @@
 var RSSI_THRESHOLD = -90,
     util = require('util'),
     EventEmitter = require('events').EventEmitter//,
-    //noble = require('noble')
+    noble = require('noble')
 
 var BluetoothBMS = function (settings, evEmitter) {
     var _self = this;
