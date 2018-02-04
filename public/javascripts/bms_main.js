@@ -561,7 +561,7 @@ function setGaugeData(general) {
 		gaugeStatus = general;
 	}
 	else {
-		var arr = $.map(data, function (v, k) {
+		var arr = $.map(general, function (v, k) {
 			return {
 				k: k,
 				v: v
