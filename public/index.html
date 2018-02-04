@@ -12,26 +12,29 @@
 	<title>BMS</title>
 	<!-- Bootstrap core CSS -->
 	<link href="../../css/bootstrap.min.css" rel="stylesheet">
+	<!-- <link href="../../css/highcharts.css" rel="stylesheet"> -->
 
 </head>
 
-<body>
-
-	<nav id="header-swipe" class="navbar navbar-default">
+<body style="background-color: #1b1b1b;">
+	<nav id="header-swipe" class="navbar navbar-default" style="background-color: #1b1b1b;">
 		<!-- navbar-fixed-top -->
 		<div class="container">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
-				    aria-controls="navbar">
+				 aria-controls="navbar">
 					<span class="sr-only">Toggle navigation</span>
 				</button>
 			</div>
 			<div id="navbar" class="collapse navbar-collapse">
 				<ul class="nav nav-pills">
-					<li id="menustatus" class="active">
+					<li id="menudashboard" class="menu-item active">
+						<a href="#dashboardlink" data-transition="slide" class="navigation">Dashboard</a>
+					</li>
+					<li id="menustatus" class="menu-item">
 						<a href="#statuslink" data-transition="slide" class="navigation">Monitor</a>
 					</li>
-					<li id="menudebug">
+					<li id="menudebug" class="menu-item">
 						<a href="#debuglink" data-transition="slide" class="navigation">Debug</a>
 					</li>
 				</ul>
@@ -40,9 +43,14 @@
 		</div>
 	</nav>
 
-	<div class="container">
+	<div class="container" id="content-container">
 		<body>
-			<div id="monitorgroup">
+			<div id="dashboardgroup" class="group" index=0 >
+				<div class="col-md-12">
+					<div id="chart-amp2" style="left: 0px; top: 0px; min-width: 500px; height: 350px; user-select: none;"></div>
+				</div>
+			</div>
+			<div id="monitorgroup"  class="group" index=1 style="display: none;">
 				<div class="row">
 					<div class="col-md-12">
 						<button id="btnStartMonitor" type="button" class="btn btn-xs btn-default">start monitor</button>
@@ -101,8 +109,7 @@
 				<div id="cellcol" class="row">
 				</div>
 			</div>
-
-			<div id="debuggroup" style="display:none">
+			<div id="debuggroup"  class="group" index=2 style="display: none;">
 				<div id="messagesender" class="row">
 					<div class="col-md-12">
 						<input type="text" id="message" autocomplete="on" class="input-sm">
@@ -132,6 +139,417 @@
 		window.jQuery || document.write("<script src='../../assets/js/vendor/jquery.min.js'><\/script>")
 	</script>
 	<script src="../../javascripts/bootstrap.min.js"></script>
+	<script src="../../javascripts/echarts-all.js"></script>
+	<script src="../../javascripts/theme/macarons.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			var myChart = echarts.init(document.getElementById('chart-amp2'));
+			var option = {
+				backgroundColor: '#1b1b1b',
+				tooltip: {
+					formatter: "{a} <br/>{c} {b}"
+				},
+				toolbox: {
+					show: false
+				},
+				series: [
+					{
+						name: 'power',
+						type: 'gauge',
+						min: -16,
+						max: 48,
+						splitNumber: 16,
+						axisLine: {
+							lineStyle: {
+								color: [[0.08, '#ff4500'], [0.25, 'lime'], [0.88, '#1e90ff'], [1, '#ff4500']],
+								width: 3,
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisLabel: {
+							textStyle: {
+								fontWeight: 'bolder',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisTick: {
+							length: 15,
+							lineStyle: {
+								color: 'auto',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						splitLine: {
+							length: 25,
+							lineStyle: {
+								width: 3,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						pointer: {
+							shadowColor: '#fff',
+							shadowBlur: 5
+						},
+						title: {
+							textStyle: {
+								fontWeight: 'bolder',
+								fontSize: 20,
+								fontStyle: 'italic',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						detail: {
+							backgroundColor: 'rgba(30,144,255,0.8)',
+							borderWidth: 1,
+							borderColor: '#fff',
+							shadowColor: '#fff',
+							shadowBlur: 5,
+							offsetCenter: [0, '50%'],
+							textStyle: {
+								fontWeight: 'bolder',
+								color: '#fff'
+							}
+						},
+						data: [{ value: 0, name: 'kW' }]
+					},
+					{
+						name: 'amps',
+						type: 'gauge',
+						center: ['18%', '40%'],
+						radius: '50%',
+						min: -80,
+						max: 240,
+						endAngle: 45,
+						splitNumber: 8,
+						axisLine: {
+							lineStyle: {
+								color: [[0.08, '#ff4500'], [0.25, 'lime'], [0.88, '#1e90ff'], [1, '#ff4500']],
+								width: 2,
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisLabel: {
+							textStyle: {
+								fontWeight: 'bolder',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							},
+							formatter: function (v) {
+								return v / 10;
+							}
+						},
+						axisTick: {
+							length: 12,
+							lineStyle: {
+								color: 'auto',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						splitLine: {
+							length: 20,
+							lineStyle: {
+								width: 3,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						pointer: {
+							width: 5,
+							shadowColor: '#fff',
+							shadowBlur: 5
+						},
+						title: {
+							offsetCenter: [0, '-30%'],
+							textStyle: {
+								fontWeight: 'bolder',
+								fontStyle: 'italic',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						detail: {
+							borderColor: '#fff',
+							shadowColor: '#fff',
+							shadowBlur: 5,
+							width: 60,
+							height: 20,
+							offsetCenter: [0, '20%'],       // x, y
+							textStyle: {
+								fontWeight: 'bolder',
+								color: '#fff'
+							},
+							formatter: function (v) {
+								return v;
+							}
+						},
+						data: [{ value: 0, name: 'x10 A' }]
+					},
+					{
+						name: 'battery',
+						type: 'gauge',
+						center: ['85%', '45%'],
+						radius: '50%',
+						min: 0,
+						max: 10,
+						startAngle: 135,
+						endAngle: 45,
+						splitNumber: 4,
+						axisLine: {
+							lineStyle: {
+								color: [[0.15, '#ff4500'], [0.85, '#1e90ff'], [1, '#ff4500']],
+								width: 2,
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisTick: {
+							length: 12,
+							lineStyle: {
+								color: 'auto',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisLabel: {
+							textStyle: {
+								fontWeight: 'bolder',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							},
+							formatter: function (v) {
+								switch (v + '') {
+									case '0': return 'E';
+									case '5': return '1/2';
+									case '10': return 'F';
+								}
+							}
+						},
+						splitLine: {
+							length: 15,
+							lineStyle: {
+								width: 3,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						pointer: {
+							width: 2,
+							shadowColor: '#fff',
+							shadowBlur: 5
+						},
+						title: {
+							show: true,
+							textStyle: {
+								fontWeight: 'bolder',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						detail: {
+							show: false
+						},
+						data: [{ value: 10, name: 'Battery' }]
+					},
+					{
+						name: 'volts',
+						type: 'gauge',
+						center: ['15%', '55%'],
+						radius: '50%',
+						min: 2.6,
+						max: 4.2,
+						startAngle: 315,
+						endAngle: 225,
+						splitNumber: 4,
+						axisLine: {
+							lineStyle: {
+								color: [[0.24, '#ff4500'], [0.5, '#1e90ff'], [0.93, 'lime'], [1, '#ff4500']],
+								width: 2,
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisTick: {
+							show: true
+						},
+						axisLabel: {
+							textStyle: {
+								fontWeight: 'normal',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							},
+							formatter: function (v) {
+								var fv = v.toFixed(1);
+								if (fv === '3.8' || fv === '3.0') {
+									return '';
+								}
+								else {
+									return v.toFixed(1);
+								}
+							}
+						},
+						splitLine: {
+							length: 15,
+							lineStyle: {
+								width: 3,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						pointer: {
+							width: 2.5,
+							shadowColor: '#fff',
+							shadowBlur: 5
+						},
+						title: {
+							offsetCenter: [0, '25%'],
+							textStyle: {
+								fontWeight: 'bolder',
+								fontStyle: 'italic',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						detail: {
+							show: true,
+							offsetCenter: [0, '25%'],
+							formatter: function (v) {
+								return v.toFixed(1);
+							},
+							textStyle: {
+								fontWeight: 'bolder',
+								fontSize: 15,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						data: [{ value: 3.7, name: 'V' }]
+					},
+					{
+						name: 'temp',
+						type: 'gauge',
+						center: ['85%', '55%'],
+						radius: '50%',
+						min: -10,
+						max: 90,
+						startAngle: 315,
+						endAngle: 225,
+						splitNumber: 4,
+						axisLine: {
+							lineStyle: {
+								color: [[0.25, '#1e90ff'], [0.75, 'lime'], [1, '#ff4500']],
+								width: 2,
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						axisTick: {
+							show: true
+						},
+						axisLabel: {
+							textStyle: {
+								fontWeight: 'normal',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							},
+							formatter: function (v) {
+								var fv = v.toFixed(0);
+								if (fv === '15' || fv === '65') {
+									return '';
+								}
+								else {
+									return v.toFixed(0);
+								}
+							}
+						},
+						splitLine: {
+							length: 15,
+							lineStyle: {
+								width: 3,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						pointer: {
+							width: 2.5,
+							shadowColor: '#fff',
+							shadowBlur: 5
+						},
+						title: {
+							offsetCenter: [0, '25%'],
+							textStyle: {
+								fontWeight: 'bolder',
+								fontStyle: 'italic',
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						detail: {
+							show: true,
+							offsetCenter: [0, '25%'],
+							formatter: function (v) {
+								return v.toFixed(0);
+							},
+							textStyle: {
+								fontWeight: 'bolder',
+								fontSize: 15,
+								color: '#fff',
+								shadowColor: '#fff',
+								shadowBlur: 10
+							}
+						},
+						data: [{ value: 25, name: '°C' }]
+					}
+				]
+			};
+
+			timeTicket = setInterval(function () {
+				option.series[0].data[0].value = getRandomInt(-15, 36); //kW
+				option.series[1].data[0].value = getRandomInt(-80, 240); //Amps
+				option.series[2].data[0].value = getRandomInt(0, 10); //battery
+				option.series[3].data[0].value = getRandomInt(26, 42) / 10; //volts
+				option.series[4].data[0].value = getRandomInt(-100, 900) / 10; //temp
+				myChart.setOption(option, true);
+			}, 3000)
+			//clearInterval(timeTicket);
+
+			myChart.setOption(option);
+			myChart.setTheme(theme);
+
+			function getRandomInt(min, max) {
+				min = Math.ceil(min);
+				max = Math.floor(max);
+				return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+			}
+
+			window.onresize = function (event) {
+				myChart.resize();
+			}
+		});
+
+	</script>
 </body>
 
 </html>

@@ -2,7 +2,7 @@ var fs = require('fs'),
 	path = require('path'),
 	messages_const = new require('./messages'),
 	serialBMS = require('./serialbms');
-bluetoothBMS = require('./bluetoothbms');
+//bluetoothBMS = require('./bluetoothbms');
 
 var BMSdevice = function (settings, evEmitter) {
 
@@ -11,9 +11,9 @@ var BMSdevice = function (settings, evEmitter) {
 
 	var serial = {};
 	if (settings.portAddress === "") {
-		serial = new serialBMS(settings, evEmitter);
+		//serial = new bluetoothBMS(settings, evEmitter);
 	} else {
-		serial = new bluetoothBMS(settings, evEmitter);
+		serial = new serialBMS(settings, evEmitter);
 	}
 
 	function runMonitor() {

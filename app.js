@@ -26,8 +26,8 @@ const evEmitter = new CarCtrlEmitter();
 console.log('EventEmitter created.');
 
 // BMS dependencies and settings.
-var Bms = require('./bin/bmsdevice.js');
-const bms = new Bms(settings, evEmitter);
+//var Bms = require('./bin/bmsdevice.js');
+//const bms = new Bms(settings, evEmitter);
 
 // view engine setup - HTML
 app.use(express.static(__dirname + '/public'));
@@ -73,4 +73,4 @@ app.use(function (err, req, res, next) {
 
 exports.app = app;
 exports.evEmitter = evEmitter;
-exports.bms = bms;
+//exports.bms = bms;
