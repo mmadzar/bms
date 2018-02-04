@@ -19,6 +19,7 @@
     "pug": "",
     "serialport": "^6.0.4",
     "serve-favicon": "",
-    "socket.io": ""
+    "socket.io": "",
+    "noble": ""
   }
 }
