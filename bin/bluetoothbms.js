@@ -7,7 +7,7 @@ var BluetoothBMS = function (settings, evEmitter) {
     var _self = this;
 
     // config
-    /*var device = settings.bluetoothAddress; //Serial port
+    var device = settings.bluetoothAddress; //Serial port
     var deviceId = settings.deviceId; //device id on network
 
     // setup interface
@@ -165,7 +165,7 @@ var BluetoothBMS = function (settings, evEmitter) {
 
     _self.isReady = function () {
         return msgQueue.length === 0;
-    }*/
+    }
 };
 
 util.inherits(BluetoothBMS, EventEmitter);
