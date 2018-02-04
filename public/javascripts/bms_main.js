@@ -564,7 +564,7 @@ function setGaugeData(general) {
 		var arr = $.map(general, function (v, k) {
 			return {
 				k: k,
-				v: v
+				v: parseFloat(v)
 			};
 		});
 		for (var i = arr.length - 1; i >= 0; i--) {
