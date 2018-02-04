@@ -557,17 +557,31 @@ function setGauges(elementId) {
 }
 
 function setGaugeData(general) {
+	if (gaugeStatus === {}) {
+		gaugeStatus = general;
+	}
+	else {
+		var arr = $.map(data, function (v, k) {
+			return {
+				k: k,
+				v: v
+			};
+		});
+		for (var i = arr.length - 1; i >= 0; i--) {
+			gaugeStatus[arr[i].k] = arr[i];
+		}
+	}
 	if (general !== undefined) {
 		if (general.currentA !== undefined || general.packV !== undefined) {
-			option.series[0].data[0].value = general.packV * general.currentA / 1000; //kW
-			option.series[1].data[0].value = general.currentA; //Amps
-			option.series[3].data[0].value = general.packV; //volts
+			option.series[0].data[0].value = gaugeStatus.packV * gaugeStatus.currentA / 1000; //kW
+			option.series[1].data[0].value = gaugeStatus.currentA; //Amps
+			option.series[3].data[0].value = gaugeStatus.packV; //volts
 		}
 		if (general.remaining !== undefined || general.full !== undefined) {
-			option.series[2].data[0].value = general.remaining / general.full * 10; //battery
+			option.series[2].data[0].value = gaugeStatus.remaining / gaugeStatus.full * 10; //battery
 		}
 		if (general.temp1 !== undefined) {
-			option.series[4].data[0].value = general.temp1; //temp
+			option.series[4].data[0].value = gaugeStatus.temp1; //temp
 		}
 		myChart.setOption(option, true);
 	}
