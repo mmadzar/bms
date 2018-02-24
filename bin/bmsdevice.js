@@ -6,10 +6,10 @@ var fs = require('fs'),
 
 var BMSdevice = function (settings, evEmitter) {
 
-	var monitorTimer = {};
-	var statusAll = {}; //status object with stored values
+	var monitorTimer = {},
+		statusAll = {}, //status object with stored values
+		serial = {};
 
-	var serial = {};
 	if (settings.portAddress === "") {
 		serial = new bluetoothBMS(settings, evEmitter);
 	} else {
@@ -21,7 +21,10 @@ var BMSdevice = function (settings, evEmitter) {
 		//Send messages
 		if (serial.isReady()) {
 			serial.sendMessage(messages_const.getInfo03());
-			serial.sendMessage(messages_const.getInfo04());
+			if (settings.logToFile) {
+				//read additional info for file logs
+				serial.sendMessage(messages_const.getInfo04());
+			}
 		}
 		monitorTimer = setTimeout(function () {
 			runMonitor();

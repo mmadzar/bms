@@ -1,27 +1,22 @@
-var express = require('express');
-var fs = require('fs');
-var path = require('path');
-var settings = require('./bin/settings');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var sassMiddleware = require('node-sass-middleware');
-//var baasic = require('baasic-sdk-nodejs');
-var index = require('./routes/index');
-var users = require('./routes/users');
+var express = require('express'),
+  fs = require('fs'),
+  path = require('path'),
+  settings = require('./bin/settings'),
+  favicon = require('serve-favicon'),
+  logger = require('morgan'),
+  cookieParser = require('cookie-parser'),
+  bodyParser = require('body-parser'),
+  sassMiddleware = require('node-sass-middleware'),
+  index = require('./routes/index');
 
 //config settings - load settings from file
 settings.load();
 
 var app = express();
 
-// Baasic
-//var baasicApp = new baasic.BaasicApp('showcase-raspberrypi-bmw');
-
 // Event emitter
 const EventEmitter = require('events');
-class CarCtrlEmitter extends EventEmitter {}
+class CarCtrlEmitter extends EventEmitter { }
 const evEmitter = new CarCtrlEmitter();
 console.log('EventEmitter created.');
 
@@ -35,7 +30,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -51,7 +46,6 @@ app.use(sassMiddleware({
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
-app.use('/users', users);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
