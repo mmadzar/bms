@@ -1,3 +1,6 @@
+-- run all as root because of permissions
+sudo su
+
 * run bluetooth in compatible mode
 sudo nano /etc/systemd/system/dbus-org.bluez.service
 - add --compat option to bluetoothd
@@ -14,3 +17,7 @@ npm i -g serialport --unsafe-perm
 rebuild as root:
 sudo su
 sudo npm rebuild
+
+-- run node-on-android - notice current folder
+root@debianvb:/home/debian/apk# node-on-android /home/debian/bms -o bmsapp.apk -b /home/debian/android/tools/
+
