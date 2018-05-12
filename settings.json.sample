@@ -2,16 +2,24 @@
     "devices": [
         {
             "deviceId": "bms01",
-            "bluetoothAddress": "00:15:83:00:7a:11" //lower case letters
+            "portAddress": "",
+            "bluetoothAddress": "a4:c1:38:a0:fd:4d", //lower case letters
+            "bluetoothService": "ff00",
+            "bluetoothCharacteristicRead": "ff01",
+            "bluetoothCharacteristicWrite": "ff02"
         },
         {
             "deviceId": "bms02",
-            "portAddress": "COM20"
+            "portAddress": "",
+            "bluetoothAddress": "a4:c1:38:a0:18:a9",
+            "bluetoothService": "ff00",
+            "bluetoothCharacteristicRead": "ff01",
+            "bluetoothCharacteristicWrite": "ff02"
         }
     ],
     "monitor": {
         "refreshInterval": 300,
         "autoStart": false,
-        "logToFile": false
+        "logToFile": true
     }
 }
