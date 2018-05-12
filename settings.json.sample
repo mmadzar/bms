@@ -1,7 +1,14 @@
- {
-    "deviceId": "bms01",
-    "portAddress": "COM20",
-    "bluetoothAddress": "00:15:83:00:71:11",
+{
+    "devices": [
+        {
+            "deviceId": "bms01",
+            "bluetoothAddress": "00:15:83:00:7a:11" //lower case letters
+        },
+        {
+            "deviceId": "bms02",
+            "portAddress": "COM20"
+        }
+    ],
     "monitor": {
         "refreshInterval": 300,
         "autoStart": false,

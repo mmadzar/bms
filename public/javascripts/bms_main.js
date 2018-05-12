@@ -25,6 +25,11 @@ jQuery(function ($) {
 		}
 	});
 
+	$('#btnReadCells').click(function (e) {
+		e.preventDefault();
+		sendMessage('dd a5 04 00 ff fc 77'); //cell info
+	});
+
 	$('#btnStartMonitor').click(function (e) {
 		e.preventDefault();
 		socket.emit('start monitor');
@@ -33,6 +38,16 @@ jQuery(function ($) {
 	$('#btnStopMonitor').click(function (e) {
 		e.preventDefault();
 		socket.emit('stop monitor');
+	});
+
+	$('#btnConnectBT').click(function (e) {
+		e.preventDefault();
+		socket.emit('connectBT');
+	});
+
+	$('#btnDisconnectBT').click(function (e) {
+		e.preventDefault();
+		socket.emit('disconnectBT');
 	});
 
 	function sendMessage(msg) {
@@ -56,10 +71,12 @@ jQuery(function ($) {
 			data = msg.info;
 		} else {
 			displayInLog(msg + '[' + msgCounter + ']</br>');
+			console.log(msg + '[' + msgCounter + ']</br>');
 		}
 
-		if ($parentCol.html().trim() === '' && msg['cell'] !== undefined) {
-			generateCellTable(msg['cell']['count']);
+		var deviceId = msg['deviceId'];
+		if ($parentCol.html().search('<div class="row"><h4>' + deviceId + '</h4>') < 0 && msg['cell'] !== undefined) {
+			generateCellTable(deviceId, msg['cell']['count']);
 		}
 		var arr = $.map(data, function (v, k) {
 			return {
@@ -68,18 +85,26 @@ jQuery(function ($) {
 			};
 		});
 		for (var i = arr.length - 1; i >= 0; i--) {
-			$parentCol.find('#' + arr[i].k).text(arr[i].v);
+			if (arr[i].k.substr(0, 4) === 'cell') {
+				$parentCol.find('#' + arr[i].k.replace('cell', 'cell' + deviceId)).text(arr[i].v);
+			}
+			else {
+				$parentCol.find('#' + arr[i].k).text(arr[i].v);
+			}
 		}
 	}
 
-	function generateCellTable(itemsCount) {
+	function generateCellTable(deviceId, itemsCount) {
 		var elems = '';
 		var cellcount = '';
+		var tblhead = '<div class="row"><h4>' + deviceId + '</h4>';
+		var tblfoot = '</div>';
 		for (var i = 0; i < itemsCount; i++) {
 			cellcount = String("0".repeat(4) + (i + 1).toString()).slice(-3);
-			elems = elems + '<div class="col-xs-4 col-md-1"><h3><label id=cell' + cellcount + ' class="label label-primary"></label></h3><label class="label label-default">' + cellcount + '</label></div>';
+			elems = elems + '<div class="col-xs-4 col-md-1"><h3><label id=cell' + deviceId + cellcount + ' class="label label-primary"></label></h3><label class="label label-default">' + cellcount + '</label></div>';
 		}
-		$cellcol.html(elems);
+		var currentContent = $cellcol.html();
+		$cellcol.html(currentContent + tblhead + elems + tblfoot);
 	}
 
 	function displayInLog(msg) {
@@ -146,12 +171,12 @@ var option;
 var gaugeStatus = {};
 
 function setGauges(elementId) {
-	var voltsMin = 2.0 * 46,
-		voltsMax = 3.7 * 46,
+	var voltsMin = 2.6 * 14,
+		voltsMax = 4.25 * 14,
 		ampsMin = -150,
 		ampsMax = 250,
-		kwMin = -25,
-		kwMax = 45;
+		kwMin = -5,
+		kwMax = 9;
 
 	myChart = echarts.init(document.getElementById(elementId));
 	option = {
@@ -186,7 +211,7 @@ function setGauges(elementId) {
 						fontSize: 20
 					},
 					formatter: function (v) {
-						switch (v % 10) {
+						switch (v % 2) {
 							case 0: return v;
 							case 5: return '';
 						}
@@ -313,7 +338,9 @@ function setGauges(elementId) {
 						color: '#fff'
 					},
 					formatter: function (v) {
-						return v.toFixed(0);
+						if (v.value !== undefined) {
+							return v.toFixed(0);
+						}
 					}
 				},
 				data: [{ value: ampsMin - 20, name: 'x10 A' }]
@@ -418,7 +445,9 @@ function setGauges(elementId) {
 						fontSize: 8
 					},
 					formatter: function (v) {
-						return v.toFixed(0);
+						if (v.value !== undefined) {
+							return v.toFixed(0);
+						}
 					}
 				},
 				splitLine: {
@@ -573,15 +602,15 @@ function setGaugeData(general) {
 	}
 	if (general !== undefined) {
 		if (general.currentA !== undefined || general.packV !== undefined) {
-			option.series[0].data[0].value = gaugeStatus.packV * gaugeStatus.currentA / 1000; //kW
-			option.series[1].data[0].value = gaugeStatus.currentA; //Amps
+			option.series[0].data[0].value = ((gaugeStatus.currentA !== undefined) ? 0 : (gaugeStatus.packV * gaugeStatus.currentA / 1000)); //kW
+			option.series[1].data[0].value = ((gaugeStatus.currentA !== undefined) ? 0 : gaugeStatus.currentA); //Amps
 			option.series[3].data[0].value = gaugeStatus.packV; //volts
 		}
 		if (general.remaining !== undefined || general.full !== undefined) {
-			option.series[2].data[0].value = gaugeStatus.remaining / gaugeStatus.full * 10; //battery
+			option.series[2].data[0].value = ((gaugeStatus.remaining !== undefined) ? gaugeStatus.remaining : 0) / ((gaugeStatus.full !== undefined) ? gaugeStatus.full : 0) * 10; //battery
 		}
-		if (general.temp1 !== undefined) {
-			option.series[4].data[0].value = gaugeStatus.temp1; //temp
+		if (general.tempMax !== undefined) {
+			option.series[4].data[0].value = gaugeStatus.tempMax; //temp
 		}
 		myChart.setOption(option, true);
 	}

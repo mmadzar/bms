@@ -1,83 +1,23 @@
-var RSSI_THRESHOLD = -90,
-    util = require('util'),
-    EventEmitter = require('events').EventEmitter//,
-    noble = require('noble')
+var util = require('util'),
+    EventEmitter = require('events').EventEmitter
 
-var BluetoothBMS = function (settings, evEmitter) {
+var BluetoothBMS = function (deviceSettings, evEmitter, noble) {
     var _self = this;
 
     // config
-    var device = settings.bluetoothAddress; //Serial port
-    var deviceId = settings.deviceId; //device id on network
-
-    // setup interface
-    if (settings.bluetoothAddress !== undefined && settings.bluetoothAddress !== '') {
-        noble.on('stateChange', function (state) {
-            console.log('state changed: ' + JSON.stringify(state));
-            if (state === 'poweredOn') {
-                console.log('started scanning...');
-                noble.startScanning([], true);
-            } else {
-                noble.stopScanning();
-            }
-        });
-    }
+    var deviceId = deviceSettings.deviceId; //device id on network
 
     var msgQueue = [];
     var allBuffer = new Buffer(0); //temporary buffer collection
     var writeNode = undefined;
-
-    //connect and attach
-    noble.on('discover', function (peripheral) {
-        if (peripheral.rssi < RSSI_THRESHOLD) {
-            // ignore
-            return;
-        }
-        // console.log('found ' + peripheral.address + '');
-        noble.stopScanning();
-        if (peripheral.address = settings.bluetoothAddress) {
-            console.log('connecting to device ' + peripheral.address + '...');
-            peripheral.connect(function (error) {
-                if (error) {
-                    console.log('Error connecting: ' + JSON.stringify(error));
-                } else {
-                    //scan services
-                    peripheral.discoverServices([], function (err, services) {
-                        services.forEach(function (service) {
-                            // this should be our service
-                            if (service.uuid === 'ffe0') {
-                                console.log('found service:', service.uuid);
-                                service.discoverCharacteristics([], function (err, characteristics) {
-                                    for (var i = 0; i < characteristics.length; i++) {
-                                        const element = characteristics[i];
-                                        // this should be our characteristic
-                                        if (element.uuid === 'ffe1') {
-                                            console.log("found characteristics: " + element.uuid);
-                                            writeNode = element;
-                                            writeNode.on('read', function (data, notification) {
-                                                if (notification) { // if you got a notification
-                                                    onSerialData(data);
-                                                } else {
-                                                    console.log('data: ' + data.toString());
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-            });
-        }
-    });
+    var readNode = undefined;
 
     function onSerialData(data) {
         updateBuffer(data);
-        evEmitter.emit('bmsdata', data); //original bus message
+        //evEmitter.emit('bmsdata', data); //original bus message
     }
 
-    function queueMessage(hexMessageWithSpaces) {
+    function queueMessageHex(hexMessageWithSpaces) {
         var chars = hexMessageWithSpaces.split(' ');
         var msg = [];
         for (var i = 0; i < chars.length; i++) {
@@ -165,6 +105,20 @@ var BluetoothBMS = function (settings, evEmitter) {
 
     _self.isReady = function () {
         return msgQueue.length === 0;
+    }
+
+    _self.setWriteNode = function (writenode) {
+        writeNode = writenode;
+    }
+    _self.setReadNode = function (readnode) {
+        readNode = readnode;
+        readNode.on('read', function (data, notification) {
+            if (notification) { // if you got a notification
+                onSerialData(data);
+            } else {
+                //console.log(device.settings.deviceId, 'data: ' + data.toString());
+            }
+        });
     }
 };
 

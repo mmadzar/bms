@@ -32,20 +32,31 @@ io.on('connection', function (socket) {
   socket.on('send message', function (msg) {
     app.bms.sendMessage(msg);
   });
-  socket.on('start monitor', function (msg) {
+  socket.on('start monitor', function () {
     var dt1 = new Date();
     app.bms.startMonitor();
     io.emit('chat message', dt1.toJSON() + '\tmonitor started.');
   });
-  socket.on('stop monitor', function (msg) {
+  socket.on('stop monitor', function () {
     var dt2 = new Date();
     app.bms.stopMonitor();
     io.emit('chat message', dt2.toJSON() + '\tmonitor stopped.');
+  });
+  socket.on('connectBT', function () {
+    var dt3 = new Date();
+    io.emit('chat message', dt3.toJSON() + '\tConnecting BT devices...');
+    app.bms.connectBT();
+  });
+  socket.on('disconnectBT', function () {
+    var dt4 = new Date();
+    io.emit('chat message', dt4.toJSON() + '\tdisconnecting BT devices...');
+    app.bms.disconnectBT();
   });
 });
 
 //The Emitter events
 app.evEmitter.on('sent', function (data) {
+  // skip this log
   // all messages to serial (including monitor)
   // var dt = new Date();
   // io.emit('chat message', dt.toJSON() + '\t' + data);

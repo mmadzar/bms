@@ -2,12 +2,12 @@ var SerialPort = require('serialport');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 	
-var SerialBMS = function (settings, evEmitter) {
+var SerialBMS = function (deviceSettings, evEmitter) {
     var _self = this;
 
     // config
-    var device = settings.portAddress; //Serial port
-    var deviceId = settings.deviceId; //device id on network
+    var device = deviceSettings.portAddress; //Serial port
+    var deviceId = deviceSettings.deviceId; //device id on network
 
     // setup interface
     var serialInterface = new SerialPort(device, {
@@ -25,7 +25,7 @@ var SerialBMS = function (settings, evEmitter) {
 
     // events
     serialInterface.on('open', function (err) {
-        evEmitter.emit('device', 'connected ' + deviceId)
+        evEmitter.emit('device', 'connected ' + deviceId);
         console.log('connected ' + deviceId);
     });
     serialInterface.on('data', onSerialData);

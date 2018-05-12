@@ -3,14 +3,10 @@ var express = require('express'),
   path = require('path'),
   settings = require('./bin/settings'),
   favicon = require('serve-favicon'),
-  logger = require('morgan'),
-  cookieParser = require('cookie-parser'),
-  bodyParser = require('body-parser'),
-  sassMiddleware = require('node-sass-middleware'),
   index = require('./routes/index');
 
 //config settings - load settings from file
-settings.load();
+settings = settings.load();
 
 var app = express();
 
@@ -27,22 +23,9 @@ const bms = new Bms(settings, evEmitter);
 // view engine setup - HTML
 app.use(express.static(__dirname + '/public'));
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: false
-}));
-app.use(cookieParser());
-app.use(sassMiddleware({
-  src: path.join(__dirname, 'public'),
-  dest: path.join(__dirname, 'public'),
-  indentedSyntax: true, // true = .sass and false = .scss
-  sourceMap: true
-}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);

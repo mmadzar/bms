@@ -6,18 +6,11 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "body-parser": "",
     "bootstrap3": "^3.3.5",
-    "cookie-parser": "",
     "debug": "",
     "echarts": "^4.0.2",
     "express": "",
     "jquery-mobile": "^1.5.0-alpha.1",
-    "morgan": "",
-    "node-sass-middleware": "",
-    "popper.js": "^1.12.9",
-    "pug": "",
-    "serialport": "^6.0.4",
     "serve-favicon": "",
     "socket.io": "",
     "noble": ""
