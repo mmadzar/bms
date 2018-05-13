@@ -8,11 +8,11 @@
   "dependencies": {
     "bootstrap3": "^3.3.5",
     "debug": "",
-    "echarts": "^4.0.2",
+    "echarts": "^4.1.0",
     "express": "",
     "jquery-mobile": "^1.5.0-alpha.1",
+    "noble": "",
     "serve-favicon": "",
-    "socket.io": "",
-    "noble": ""
+    "socket.io": ""
   }
 }
