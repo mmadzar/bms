@@ -238,7 +238,7 @@ var BMSdevice = function (settings, evEmitter) {
 						summary[tKey] = avg.toFixed(0);
 					}
 					break;
-					
+
 				case 'packV':
 					var sum = getSum(group, tKey);
 					if (tVal !== sum) {
@@ -278,7 +278,6 @@ var BMSdevice = function (settings, evEmitter) {
 				}
 			}
 		});
-		console.log(count, total,((count>0) ? total / count : 0) );
 		return ((count>0) ? total / count : 0);
 	}
 
