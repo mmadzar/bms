@@ -1,6 +1,6 @@
 //module settings.js
-var fs = require('fs');
-var filename = ('settings.json');
+const fs = require('fs'),
+    filename = ('settings.json');
 
 settings = {
     devices:
@@ -12,12 +12,6 @@ settings = {
     },
     load: function () {
         return JSON.parse(fs.readFileSync(filename));
-        // this.deviceId = loaded.deviceId;
-        // this.portAddress = loaded.portAddress;
-        // this.bluetoothAddress = loaded.bluetoothAddress;
-        // this.monitor.refreshInterval = loaded.monitor.refreshInterval;
-        // this.monitor.autoStart = loaded.monitor.autoStart;
-        // this.monitor.logToFile = loaded.monitor.logToFile;
     },
     save: function () {
         fs.writeFileSync(filename, JSON.stringify(this));

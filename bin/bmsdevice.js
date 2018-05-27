@@ -1,5 +1,5 @@
 //handles collection of bms devices
-var RSSI_THRESHOLD = -90,
+const RSSI_THRESHOLD = -90,
 	fs = require('fs'),
 	path = require('path'),
 	messages_const = new require('./messages'),
@@ -8,12 +8,12 @@ var RSSI_THRESHOLD = -90,
 
 var BMSdevice = function (settings, evEmitter) {
 
-	var monitorTimer = {},
+	let monitorTimer = {},
 		statusAll = {}, //status object with stored values
 		btdevices = []; //bluetooth devices
 
 	settings.devices.forEach(device => {
-		var btDevice = new bluetoothBMS(device, evEmitter, noble);
+		const btDevice = new bluetoothBMS(device, evEmitter, noble);
 		btdevices.push({ settings: device, peripheral: undefined, device: btDevice });
 	});
 
@@ -54,7 +54,7 @@ var BMSdevice = function (settings, evEmitter) {
 			noble.stopScanning();
 
 			btdevices.forEach(deviceBT => {
-				var peripheralBT = deviceBT.peripheral;
+				const peripheralBT = deviceBT.peripheral;
 				console.log('connecting to device ' + peripheralBT.address + '...');
 				evEmitter.emit('device', deviceBT.settings.deviceId + ' connecting...');
 				peripheralBT.connect(function (error) {
@@ -77,8 +77,8 @@ var BMSdevice = function (settings, evEmitter) {
 					console.log(deviceBT.settings.deviceId, 'found service:', service.uuid);
 					//scan characteristics
 					service.discoverCharacteristics([deviceBT.settings.bluetoothCharacteristicRead, deviceBT.settings.bluetoothCharacteristicWrite], function (err1, characteristics) {
-						for (var i = 0; i < characteristics.length; i++) {
-							var element = characteristics[i];
+						for (let i = 0; i < characteristics.length; i++) {
+							const element = characteristics[i];
 							evEmitter.emit('device', deviceBT.settings.deviceId + ' characteristic OK.');
 							console.log(deviceBT.settings.deviceId, "found characteristics: ", element.uuid);
 							if (element.uuid === deviceBT.settings.bluetoothCharacteristicRead) {
@@ -107,7 +107,7 @@ var BMSdevice = function (settings, evEmitter) {
 
 
 	function runMonitor() {
-		var resolution = settings.monitor.refreshInterval; //miliseconds
+		const resolution = settings.monitor.refreshInterval; //miliseconds
 		//Send messages to BT
 		btdevices.forEach(device => {
 			if (device.device.isReady()) {
@@ -141,7 +141,7 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function decodeInfo03(messageArray) {
-		var result = {};
+		let result = {};
 		result['packV'] = ((messageArray[4] * 16 * 16 + messageArray[5]) / 100).toFixed(2);
 		result['currentA'] = ((messageArray[6] * 16 * 16 + messageArray[7]) / 10000).toFixed(0);
 
@@ -154,21 +154,21 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function decodeInfo04(messageArray) {
-		var count = ((messageArray[2] * (16 * 16)) + (messageArray[3])) / 2;
-		var result = {};
+		const count = ((messageArray[2] * (16 * 16)) + (messageArray[3])) / 2;
+		let result = {};
 		result['count'] = count;
-		for (var i = 0; i < count; i++) {
-			var index = (i * 2) + 4;
-			var cellV = (messageArray[index] * (16 * 16)) + (messageArray[index + 1]);
+		for (let i = 0; i < count; i++) {
+			const index = (i * 2) + 4,
+				cellV = (messageArray[index] * (16 * 16)) + (messageArray[index + 1]);
 			result['cell' + padLeft((i + 1).toString(), 3)] = (cellV / 1000.000).toFixed(3);
 		}
 		return result;
 	}
 
 	function decodeInfo05(messageArray) {
-		var result = {};
-		var msg = [];
-		for (var i = 0 + 4; i < messageArray.length - 4; i++) { //skip message start and end
+		let result = {},
+			msg = [];
+		for (let i = 0 + 4; i < messageArray.length - 4; i++) { //skip message start and end
 			msg.push(String.fromCharCode(messageArray[i]));
 		}
 		result['name'] = msg.join('');
@@ -176,26 +176,26 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function getTemp(kelvin10) {
-		var tempC = (kelvin10 / 10) - 273.15; // Convert Kelvin to Celsius
+		const tempC = (kelvin10 / 10) - 273.15; // Convert Kelvin to Celsius
 		return tempC.toFixed(2);
 	}
 
 	//emits an array of statuses
 	function emitStatus(deviceId, k, v) {
 		logToFile(deviceId, k, v);
-		var result = {};
+		let result = {};
 		result[k] = undefined;
 		if (statusAll[deviceId] === undefined) {
 			statusAll[deviceId] = {};
 		}
-		var inMemValues = statusAll[deviceId][k];
-		var tKey = '';
-		var tVal = '';
+		let inMemValues = statusAll[deviceId][k],
+			tKey = '',
+			tVal = '';
 		if (inMemValues === undefined) {
 			result[k] = v;
 			statusAll[deviceId][k] = v;
 		} else {
-			for (var i = 0; i < Object.keys(v).length; i++) {
+			for (let i = 0; i < Object.keys(v).length; i++) {
 				tKey = Object.keys(v)[i];
 				tVal = v[tKey];
 				if (inMemValues[tKey] !== tVal) { // only changed values
@@ -208,15 +208,15 @@ var BMSdevice = function (settings, evEmitter) {
 			}
 		}
 		if (result[k] !== undefined && Object.keys(result[k]).length > 0) {
-			var d = new Date();
-			var output = {};
+			const d = new Date();
+			let output = {};
 
 			if (k === 'cell') {
 				output[k] = v;
 			}
 			else {
 				//calculate totals
-				var summary = getTotals(k, result[k]);
+				const summary = getTotals(k, result[k]);
 				output[k] = summary;
 			}
 			output['timestamp'] = d.toISOString().substr(0, 21);
@@ -226,30 +226,30 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function getTotals(group, values) {
-		var summary = {};
-		for (var i = 0; i < Object.keys(values).length; i++) {
+		let summary = {};
+		for (let i = 0; i < Object.keys(values).length; i++) {
 			tKey = Object.keys(values)[i];
 			tVal = values[tKey];
 			switch (tKey) {
 				case 'remaining':
 				case 'full':
-					var avg = getAvg(group, tKey);
-					if (tVal !== avg) {
+					const avg = getAvg(group, tKey);
+					if (tVal !== avg || tKey==='full') {
 						summary[tKey] = avg.toFixed(0);
 					}
 					break;
 
 				case 'packV':
-					var sum = getSum(group, tKey);
+					const sum = getSum(group, tKey);
 					if (tVal !== sum) {
 						summary[tKey] = sum.toFixed(2);
 					}
 					break;
 
 				case 'currentA':
-					var avg = getAvg(group, tKey);
-					if (tVal !== avg) {
-						summary[tKey] = avg.toFixed(2);
+					const avgA = getAvg(group, tKey);
+					if (tVal !== avgA) {
+						summary[tKey] = avgA.toFixed(2);
 					}
 					break;
 
@@ -267,10 +267,10 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function getAvg(group, key) {
-		var total = 0;
-		var count = 0;
+		let total = 0,
+			count = 0;
 		btdevices.forEach(device => {
-			var currentStatus = statusAll[device.settings.deviceId];
+			const currentStatus = statusAll[device.settings.deviceId];
 			if (currentStatus !== undefined && currentStatus[group] !== undefined) {
 				count++;
 				if (currentStatus[group][key] !== undefined) {
@@ -278,13 +278,13 @@ var BMSdevice = function (settings, evEmitter) {
 				}
 			}
 		});
-		return ((count>0) ? total / count : 0);
+		return ((count > 0) ? total / count : 0);
 	}
 
 	function getSum(group, key) {
-		var total = 0;
+		let total = 0;
 		btdevices.forEach(device => {
-			var currentStatus = statusAll[device.settings.deviceId];
+			const currentStatus = statusAll[device.settings.deviceId];
 			if (currentStatus !== undefined && currentStatus[group] !== undefined) {
 				total = total + parseFloat(currentStatus[group][key]);
 			}
@@ -293,12 +293,12 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function getMinTemp(group, key) {
-		var min = 1000;
+		let min = 1000;
 		btdevices.forEach(device => {
-			var currentStatus = statusAll[device.settings.deviceId];
+			const currentStatus = statusAll[device.settings.deviceId];
 			if (currentStatus !== undefined && currentStatus[group] !== undefined) {
-				var value1 = parseFloat(currentStatus[group]["temp1"]);
-				var value2 = parseFloat(currentStatus[group]["temp2"]);
+				const value1 = parseFloat(currentStatus[group]["temp1"]),
+					value2 = parseFloat(currentStatus[group]["temp2"]);
 				if (min === undefined || min > value1) {
 					min = value1;
 				}
@@ -311,12 +311,12 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function getMaxTemp(group) {
-		var max = -1000;
+		let max = -1000;
 		btdevices.forEach(device => {
-			var currentStatus = statusAll[device.settings.deviceId];
+			const currentStatus = statusAll[device.settings.deviceId];
 			if (currentStatus !== undefined && currentStatus[group] !== undefined) {
-				var value1 = parseFloat(currentStatus[group]["temp1"]);
-				var value2 = parseFloat(currentStatus[group]["temp2"]);
+				const value1 = parseFloat(currentStatus[group]["temp1"]),
+					value2 = parseFloat(currentStatus[group]["temp2"]);
 				if (max === undefined || max < value1) {
 					max = value1;
 				}
@@ -329,11 +329,11 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function logToFile(deviceId, k, v) {
-		var d = new Date();
-		var filename = 'logs/' + deviceId + '_' + d.toISOString().substr(0, 13).replace(/-/g, '') + '_log_' + k + '.csv';
+		const d = new Date(),
+			filename = 'logs/' + deviceId + '_' + d.toISOString().substr(0, 13).replace(/-/g, '') + '_log_' + k + '.csv';
 
-		var content = d.toISOString() + ';';
-		for (var i = 0; i < Object.keys(v).length; i++) {
+		let content = d.toISOString() + ';';
+		for (let i = 0; i < Object.keys(v).length; i++) {
 			content = content + v[Object.keys(v)[i]] + ';';
 		}
 		content = content + '\n';
@@ -352,18 +352,18 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	function toHexString(bArray) {
-		var result = [];
-		for (var i = 0; i < bArray.length; i++) {
+		let result = [];
+		for (let i = 0; i < bArray.length; i++) {
 			result.push(padLeft(bArray[i].toString(16), 2));
 		}
 		return result.join(' ');
 	}
 
 	function getPaddedLenBuf(text, len) {
-		var outputTextBuf = new Buffer(len);
+		let outputTextBuf = new Buffer(len);
 		outputTextBuf.fill(0x20);
 
-		var textBuf = (new Buffer(text, 'utf-8')).slice(0, len);
+		let textBuf = (new Buffer(text, 'utf-8')).slice(0, len);
 
 		// copy to the new padded buffer
 		textBuf.copy(outputTextBuf);
@@ -382,9 +382,9 @@ var BMSdevice = function (settings, evEmitter) {
 
 	//Exported functions
 	this.sendMessage = function (msgHexStringWithSpaces) {
-		var arrMsg = msgHexStringWithSpaces.split(' ');
-		var forSend = new Buffer(arrMsg.length);
-		for (var i = 0; i < arrMsg.length; i++) {
+		const arrMsg = msgHexStringWithSpaces.split(' ');
+		let forSend = new Buffer(arrMsg.length);
+		for (let i = 0; i < arrMsg.length; i++) {
 			forSend[i] = parseInt(arrMsg[i], 16);
 		}
 
@@ -398,7 +398,7 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 
 	this.startMonitor = function () {
-		var allConnected = btdevices.length;
+		let allConnected = btdevices.length;
 		btdevices.forEach(device => {
 			if (device.peripheral !== undefined) {
 				allConnected = allConnected - 1;
@@ -420,7 +420,7 @@ var BMSdevice = function (settings, evEmitter) {
 	}
 	this.connectBT = function () {
 		//are all devices disconnected?
-		var allDisconnected = 0;
+		let allDisconnected = 0;
 		btdevices.forEach(device => {
 			if (device.peripheral !== undefined) {
 				allDisconnected = allDisconnected + 1;

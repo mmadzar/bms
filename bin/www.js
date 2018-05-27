@@ -4,52 +4,52 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('carctrl:server');
-var http = require('http');
-var dateVar = new Date();
+const app = require('../app'),
+  debug = require('debug')('carctrl:server'),
+  http = require('http'),
+  dateVar = new Date();
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3001');
+const port = normalizePort(process.env.PORT || '3001');
 app.app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app.app);
+const server = http.createServer(app.app);
 
 // socket.io
-var io = require('socket.io')(server);
+const io = require('socket.io')(server);
 io.on('connection', function (socket) {
   console.log('user connected');
-  var dt = new Date();
+  const dt = new Date();
   app.bms.resetInMemoryStatus();
   io.emit('chat message', dt.toJSON() + '\t' + 'io ready.');
   socket.on('send message', function (msg) {
     app.bms.sendMessage(msg);
   });
   socket.on('start monitor', function () {
-    var dt1 = new Date();
+    let dt1 = new Date();
     app.bms.startMonitor();
     io.emit('chat message', dt1.toJSON() + '\tmonitor started.');
   });
   socket.on('stop monitor', function () {
-    var dt2 = new Date();
+    let dt1 = new Date();
     app.bms.stopMonitor();
-    io.emit('chat message', dt2.toJSON() + '\tmonitor stopped.');
+    io.emit('chat message', dt1.toJSON() + '\tmonitor stopped.');
   });
   socket.on('connectBT', function () {
-    var dt3 = new Date();
-    io.emit('chat message', dt3.toJSON() + '\tConnecting BT devices...');
+    let dt1 = new Date();
+    io.emit('chat message', dt1.toJSON() + '\tConnecting BT devices...');
     app.bms.connectBT();
   });
   socket.on('disconnectBT', function () {
-    var dt4 = new Date();
-    io.emit('chat message', dt4.toJSON() + '\tdisconnecting BT devices...');
+    let dt1 = new Date();
+    io.emit('chat message', dt1.toJSON() + '\tdisconnecting BT devices...');
     app.bms.disconnectBT();
   });
 });
@@ -63,14 +63,15 @@ app.evEmitter.on('sent', function (data) {
 });
 app.evEmitter.on('msgsent', function (data) {
   // only messages sent by user
-  var dt = new Date();
+  const dt = new Date();
   io.emit('chat message', dt.toJSON() + '\tsend\t' + data.toString('hex'));
 });
 app.evEmitter.on('device', function (data) {
-  var dt = new Date();
+  const dt = new Date();
   io.emit('chat message', dt.toJSON() + '\t' + data);
 });
 app.evEmitter.on('status', function (data) {
+  //console.log('***', data);
   io.emit('status update', data);
 });
 
@@ -87,7 +88,7 @@ server.on('listening', onListening);
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  const port = parseInt(val, 10);
 
   if (isNaN(port)) {
     // named pipe

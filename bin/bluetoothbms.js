@@ -1,16 +1,16 @@
-var util = require('util'),
+const util = require('util'),
     EventEmitter = require('events').EventEmitter
 
 var BluetoothBMS = function (deviceSettings, evEmitter, noble) {
     var _self = this;
 
     // config
-    var deviceId = deviceSettings.deviceId; //device id on network
+    const deviceId = deviceSettings.deviceId; //device id on network
 
-    var msgQueue = [];
-    var allBuffer = new Buffer(0); //temporary buffer collection
-    var writeNode = undefined;
-    var readNode = undefined;
+    let msgQueue = [],
+        allBuffer = new Buffer(0), //temporary buffer collection
+        writeNode = undefined,
+        readNode = undefined;
 
     function onSerialData(data) {
         updateBuffer(data);
@@ -18,12 +18,12 @@ var BluetoothBMS = function (deviceSettings, evEmitter, noble) {
     }
 
     function queueMessageHex(hexMessageWithSpaces) {
-        var chars = hexMessageWithSpaces.split(' ');
-        var msg = [];
-        for (var i = 0; i < chars.length; i++) {
+        const chars = hexMessageWithSpaces.split(' ');
+        let msg = [];
+        for (let i = 0; i < chars.length; i++) {
             msg.push('0x' + chars[i]);
         }
-        var msgBuff = new Buffer(msg);
+        const msgBuff = new Buffer(msg);
         queueMessage(msgBuff);
     }
 
@@ -40,7 +40,7 @@ var BluetoothBMS = function (deviceSettings, evEmitter, noble) {
     }
 
     function writeMessageToSerial() {
-        var msg = msgQueue[0];
+        let msg = msgQueue[0];
         if (msg !== undefined && msg.status === 0) {
             if (writeNode !== undefined) {
                 writeNode.write(new Buffer(msg.content), false, function (error) {
@@ -67,9 +67,9 @@ var BluetoothBMS = function (deviceSettings, evEmitter, noble) {
 
         if (allBuffer.length > 4) {
             if (allBuffer[0] === 221 && dataBuff[dataBuff.length - 1] === 119) { //DD A5 (5A) LL LL ... 77
-                var mlen = (allBuffer[2] * (16 * 16)) + (allBuffer[3]);
+                const mlen = (allBuffer[2] * (16 * 16)) + (allBuffer[3]);
                 if (mlen > 0 && allBuffer.length >= mlen + 7) {
-                    var buffMsg = new Buffer(msgQueue[0].content); //get message copy
+                    const buffMsg = new Buffer(msgQueue[0].content); //get message copy
                     msgQueue.shift();
                     _self.emit('data', {
                         command: buffMsg,

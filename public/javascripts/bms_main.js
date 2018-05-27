@@ -1,13 +1,13 @@
 jQuery(function ($) {
-	var msgCounter = 0;
-	var socket = io();
-	var $messageslist = $('#messageslist');
-	var $generalcol = $('#generalcol');
-	var $cellcol = $('#cellcol');
-	var $infocol = $('#infocol');
+	const socket = io(),
+		$messageslist = $('#messageslist'),
+		$generalcol = $('#generalcol'),
+		$cellcol = $('#cellcol'),
+		$infocol = $('#infocol');
+	let msgCounter = 0;
 
 	socket.on('disconnect', function (reason) {
-		var dt = new Date();
+		const dt = new Date();
 		displayInLog(dt.toJSON() + '\t' + 'io error: ' + reason + '</br>');
 	});
 	socket.on('chat message', function (msg) {
@@ -19,7 +19,7 @@ jQuery(function ($) {
 
 	$('#btnSendMessage').click(function (e) {
 		e.preventDefault();
-		var msg = $('#message').val();
+		const msg = $('#message').val();
 		if (msg !== undefined && msg.length > 0) {
 			sendMessage(msg);
 		}
@@ -55,9 +55,9 @@ jQuery(function ($) {
 	}
 
 	function parseStatusUpdate(msg) {
-		var data = {};
+		let data = {};
 		$infocol.find("#timestamp").text(msg.timestamp);
-		var $parentCol = $cellcol;
+		let $parentCol = $cellcol;
 		if (msg['general'] !== undefined) {
 			$parentCol = $generalcol;
 			data = msg.general;
@@ -74,36 +74,37 @@ jQuery(function ($) {
 			console.log(msg + '[' + msgCounter + ']</br>');
 		}
 
-		var deviceId = msg['deviceId'];
+		const deviceId = msg['deviceId'];
 		if ($parentCol.html().search('<div class="row"><h4>' + deviceId + '</h4>') < 0 && msg['cell'] !== undefined) {
 			generateCellTable(deviceId, msg['cell']['count']);
 		}
-		var arr = $.map(data, function (v, k) {
+		const arr = $.map(data, function (v, k) {
 			return {
 				k: k,
 				v: v
 			};
 		});
-		for (var i = arr.length - 1; i >= 0; i--) {
+		for (let i = arr.length - 1; i >= 0; i--) {
 			if (arr[i].k.substr(0, 4) === 'cell') {
 				$parentCol.find('#' + arr[i].k.replace('cell', 'cell' + deviceId)).text(arr[i].v);
 			}
 			else {
+				console.log('---', arr[i].k, arr[i].v);
 				$parentCol.find('#' + arr[i].k).text(arr[i].v);
 			}
 		}
 	}
 
 	function generateCellTable(deviceId, itemsCount) {
-		var elems = '';
-		var cellcount = '';
-		var tblhead = '<div class="row"><h4>' + deviceId + '</h4>';
-		var tblfoot = '</div>';
-		for (var i = 0; i < itemsCount; i++) {
+		let elems = '',
+			cellcount = '',
+			tblhead = '<div class="row"><h4>' + deviceId + '</h4>',
+			tblfoot = '</div>';
+		for (let i = 0; i < itemsCount; i++) {
 			cellcount = String("0".repeat(4) + (i + 1).toString()).slice(-3);
 			elems = elems + '<div class="col-xs-4 col-md-1"><h3><label id=cell' + deviceId + cellcount + ' class="label label-primary"></label></h3><label class="label label-default">' + cellcount + '</label></div>';
 		}
-		var currentContent = $cellcol.html();
+		let currentContent = $cellcol.html();
 		$cellcol.html(currentContent + tblhead + elems + tblfoot);
 	}
 
@@ -113,21 +114,21 @@ jQuery(function ($) {
 
 	//menu navigation
 	$('.navigation').on('click', function (e) {
-		var elName = e.target.href.split('#')[1];
-		var groupEl = '#' + elName.replace('link', 'group');
+		let elName = e.target.href.split('#')[1];
+		let groupEl = '#' + elName.replace('link', 'group');
 		showTab(parseInt($(groupEl).attr('index')));
 	});
 
 	$('#header-swipe').on("swipeleft", function (e) {
 		//visible tab
-		var vTab = parseInt($('[class="group"][style!="display: none;"]').attr('index'));
+		let vTab = parseInt($('[class="group"][style!="display: none;"]').attr('index'));
 		vTab++;
 		showTab(levelVisibleTabIndex(vTab));
 	});
 
 	$('#header-swipe').on("swiperight", function (e) {
 		//visible tab
-		var vTab = parseInt($('[class="group"][style!="display: none;"]').attr('index'));
+		let vTab = parseInt($('[class="group"][style!="display: none;"]').attr('index'));
 		vTab--;
 		showTab(levelVisibleTabIndex(vTab));
 	});
@@ -166,12 +167,12 @@ jQuery(function ($) {
 
 });
 
-var myChart;
-var option;
-var gaugeStatus = {};
+let myChart,
+	option,
+	gaugeStatus = {};
 
 function setGauges(elementId) {
-	var voltsMin = 2.6 * 14,
+	const voltsMin = 2.6 * 14,
 		voltsMax = 4.25 * 14,
 		ampsMin = -150,
 		ampsMax = 250,
@@ -519,7 +520,7 @@ function setGauges(elementId) {
 						shadowBlur: 10
 					},
 					formatter: function (v) {
-						var fv = v.toFixed(0);
+						const fv = v.toFixed(0);
 						if (fv === '15' || fv === '65') {
 							return '';
 						}
@@ -590,13 +591,13 @@ function setGaugeData(general) {
 		gaugeStatus = general;
 	}
 	else {
-		var arr = $.map(general, function (v, k) {
+		const arr = $.map(general, function (v, k) {
 			return {
 				k: k,
 				v: parseFloat(v)
 			};
 		});
-		for (var i = arr.length - 1; i >= 0; i--) {
+		for (let i = arr.length - 1; i >= 0; i--) {
 			gaugeStatus[arr[i].k] = arr[i].v;
 		}
 	}

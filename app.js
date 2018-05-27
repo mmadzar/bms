@@ -1,14 +1,14 @@
-var express = require('express'),
+const express = require('express'),
   fs = require('fs'),
   path = require('path'),
-  settings = require('./bin/settings'),
   favicon = require('serve-favicon'),
   index = require('./routes/index');
+let settings = require('./bin/settings');
 
 //config settings - load settings from file
 settings = settings.load();
 
-var app = express();
+let app = express();
 
 // Event emitter
 const EventEmitter = require('events');
@@ -17,7 +17,7 @@ const evEmitter = new CarCtrlEmitter();
 console.log('EventEmitter created.');
 
 // BMS dependencies and settings.
-var Bms = require('./bin/bmsdevice.js');
+const Bms = require('./bin/bmsdevice.js');
 const bms = new Bms(settings, evEmitter);
 
 // view engine setup - HTML
@@ -32,7 +32,7 @@ app.use('/', index);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  var err = new Error('Not Found');
+  let err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
